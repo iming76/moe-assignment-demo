@@ -19,7 +19,7 @@ export default function ProgressStages({
   ocrProgress: { completed: number; total: number } | null;
 }) {
   return (
-    <ul className="list-none p-0">
+    <ul className="mt-6 list-none p-0">
       {STAGES.map((stage) => {
         const reachedIndex = currentStage ? STAGES.indexOf(currentStage as (typeof STAGES)[number]) : -1;
         const done = reachedIndex >= STAGES.indexOf(stage);
