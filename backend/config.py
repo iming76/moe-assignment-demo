@@ -44,6 +44,16 @@ DEFAULT_STORAGE_ROOT = "storage"
 # Document ingestion (spec Section 5.1).
 DEFAULT_RENDER_DPI = 150
 
+# Image preprocessing pipeline (spec Section 16).
+DEFAULT_DENOISE_H = 10
+DEFAULT_CLAHE_CLIP_LIMIT = 2.0
+DEFAULT_CLAHE_GRID = 8
+DEFAULT_MAX_DESKEW_DEG = 15.0
+DEFAULT_ADAPTIVE_BLOCK_SIZE = 31
+DEFAULT_ADAPTIVE_C = 15
+DEFAULT_MORPH_CLOSE_SIZE = 3
+DEFAULT_MORPH_OPEN_SIZE = 2
+
 CONFIG_PATH = Path(__file__).resolve().parent / "config.yaml"
 
 
@@ -136,6 +146,18 @@ class IngestionConfig:
 
 
 @dataclass(frozen=True)
+class PreprocessConfig:
+    denoise_h: float = DEFAULT_DENOISE_H
+    clahe_clip_limit: float = DEFAULT_CLAHE_CLIP_LIMIT
+    clahe_grid: int = DEFAULT_CLAHE_GRID
+    max_deskew_deg: float = DEFAULT_MAX_DESKEW_DEG
+    adaptive_block_size: int = DEFAULT_ADAPTIVE_BLOCK_SIZE
+    adaptive_c: int = DEFAULT_ADAPTIVE_C
+    morph_close_size: int = DEFAULT_MORPH_CLOSE_SIZE
+    morph_open_size: int = DEFAULT_MORPH_OPEN_SIZE
+
+
+@dataclass(frozen=True)
 class Config:
     paragraph: ParagraphConfig = field(default_factory=ParagraphConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
@@ -143,6 +165,7 @@ class Config:
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
+    preprocess: PreprocessConfig = field(default_factory=PreprocessConfig)
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +249,22 @@ def _load_ingestion(raw: dict[str, Any]) -> IngestionConfig:
     return IngestionConfig(render_dpi=_int(raw, "render_dpi", DEFAULT_RENDER_DPI))
 
 
+def _load_preprocess(raw: dict[str, Any]) -> PreprocessConfig:
+    block_size = _int(raw, "adaptive_block_size", DEFAULT_ADAPTIVE_BLOCK_SIZE)
+    if block_size % 2 == 0:
+        block_size += 1  # adaptiveThreshold requires an odd block size
+    return PreprocessConfig(
+        denoise_h=_num(raw, "denoise_h", DEFAULT_DENOISE_H),
+        clahe_clip_limit=_num(raw, "clahe_clip_limit", DEFAULT_CLAHE_CLIP_LIMIT),
+        clahe_grid=_int(raw, "clahe_grid", DEFAULT_CLAHE_GRID),
+        max_deskew_deg=_num(raw, "max_deskew_deg", DEFAULT_MAX_DESKEW_DEG),
+        adaptive_block_size=block_size,
+        adaptive_c=_int(raw, "adaptive_c", DEFAULT_ADAPTIVE_C),
+        morph_close_size=_int(raw, "morph_close_size", DEFAULT_MORPH_CLOSE_SIZE),
+        morph_open_size=_int(raw, "morph_open_size", DEFAULT_MORPH_OPEN_SIZE),
+    )
+
+
 def load_config(path: Optional[Path] = None) -> Config:
     """Load config.yaml over the named defaults. Missing file or keys → defaults."""
     config_path = Path(path) if path is not None else CONFIG_PATH
@@ -246,6 +285,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),
         storage=_load_storage(raw.get("storage", {}) or {}),
         ingestion=_load_ingestion(raw.get("ingestion", {}) or {}),
+        preprocess=_load_preprocess(raw.get("preprocess", {}) or {}),
     )
 
 

@@ -38,3 +38,13 @@ storage:
 
 ingestion:
   render_dpi: 150             # DPI used when rendering PDF pages to images
+
+preprocess:
+  denoise_h: 10               # fastNlMeansDenoising strength
+  clahe_clip_limit: 2.0
+  clahe_grid: 8
+  max_deskew_deg: 15.0        # deskew corrections beyond this are clamped
+  adaptive_block_size: 31     # adaptiveThreshold neighbourhood (odd)
+  adaptive_c: 15
+  morph_close_size: 3
+  morph_open_size: 2

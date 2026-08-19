@@ -14,7 +14,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 - [x] 5a-Implement image input normalization: PNG/JPG/JPEG/WEBP → PageImage with pageNumber, path, width, height, dpi; reject unsupported formats with a clear error
 - [x] 5b-Implement PDF page rendering: scanned/image-based/multi-page PDF → per-page images via PyMuPDF; original preserved byte-for-byte in originals/
-- [ ] 6-Implement image preprocessing pipeline: grayscale, denoise, contrast normalization, deskew, threshold, morphology; persist intermediates to processed/<page>/, rendered image stays available
+- [x] 6-Implement image preprocessing pipeline: grayscale, denoise, contrast normalization, deskew, threshold, morphology; persist intermediates to processed/<page>/, rendered image stays available
 
 ## 3. Spatial Detection
 
