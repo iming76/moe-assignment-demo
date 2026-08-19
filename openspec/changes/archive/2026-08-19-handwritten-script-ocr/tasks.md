@@ -53,7 +53,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 - [x] 19b-Implement toggleable SVG overlays (question, answer, paragraphs, lines, highlights, strikethrough, carets) drawn in original image coordinate system
 - [x] 19c-Implement crop inspector: click an object → original location, corresponding crop, TrOCR result, final reconstructed text
 - [x] 19d-Implement paragraph navigation tree (Question → Answer → Paragraph N) with bbox highlight, line crops, markup display, OCR confidence flagging, and manual correction editor
-- [ ] 20-Wire frontend to backend API consuming packages/types as the single shared contract
+- [x] 20-Wire frontend to backend API consuming packages/types as the single shared contract
 
 ## 9. Verification
 
