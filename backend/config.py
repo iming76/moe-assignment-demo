@@ -56,6 +56,7 @@ DEFAULT_CARET_SYMBOL_MAX_AREA = 600
 DEFAULT_CARET_SYMBOL_BOTTOM_FRAC = 0.0   # symbols vary (top or bottom of band)
 DEFAULT_CARET_SYMBOL_BELOW_SLACK = 8     # px the symbol may dip below the band
 DEFAULT_CARET_INSERT_ABOVE = 60          # inserted text floats within this above the symbol
+DEFAULT_CARET_INSERT_MIN_ABOVE = 10      # inserted text starts at least this far above the symbol
 DEFAULT_CARET_INSERT_MAX_DX = 60         # horizontal window around the symbol
 DEFAULT_CARET_INSERT_MAX_WIDTH = 120     # inserted text is short (1-2 words)
 DEFAULT_CARET_INSERT_MAX_HEIGHT = 70     # two-row insertions ("in\nlife") allowed
@@ -70,6 +71,7 @@ class CaretConfig:
     symbol_bottom_frac: float = DEFAULT_CARET_SYMBOL_BOTTOM_FRAC
     symbol_below_slack: int = DEFAULT_CARET_SYMBOL_BELOW_SLACK
     insert_above: int = DEFAULT_CARET_INSERT_ABOVE
+    insert_min_above: int = DEFAULT_CARET_INSERT_MIN_ABOVE
     insert_max_dx: int = DEFAULT_CARET_INSERT_MAX_DX
     insert_max_width: int = DEFAULT_CARET_INSERT_MAX_WIDTH
     insert_max_height: int = DEFAULT_CARET_INSERT_MAX_HEIGHT
@@ -354,6 +356,7 @@ def _load_caret(raw: dict[str, Any]) -> CaretConfig:
         symbol_bottom_frac=_num(raw, "symbol_bottom_frac", DEFAULT_CARET_SYMBOL_BOTTOM_FRAC),
         symbol_below_slack=_int(raw, "symbol_below_slack", DEFAULT_CARET_SYMBOL_BELOW_SLACK),
         insert_above=_int(raw, "insert_above", DEFAULT_CARET_INSERT_ABOVE),
+        insert_min_above=_int(raw, "insert_min_above", DEFAULT_CARET_INSERT_MIN_ABOVE),
         insert_max_dx=_int(raw, "insert_max_dx", DEFAULT_CARET_INSERT_MAX_DX),
         insert_max_width=_int(raw, "insert_max_width", DEFAULT_CARET_INSERT_MAX_WIDTH),
         insert_max_height=_int(raw, "insert_max_height", DEFAULT_CARET_INSERT_MAX_HEIGHT),

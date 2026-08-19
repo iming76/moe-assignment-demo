@@ -60,7 +60,7 @@ def detect_carets(
             insert_parts = [
                 (ix, iy, iw, ih)
                 for ix, iy, iw, ih, ia in small
-                if top <= iy < y
+                if top <= iy <= y - cfg.insert_min_above
                 and abs((ix + iw / 2) - cx) <= cfg.insert_max_dx
                 and (ix, iy, iw, ih) != (x, y, w, h)
             ]

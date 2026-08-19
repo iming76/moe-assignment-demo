@@ -51,6 +51,7 @@ caret:
   symbol_bottom_frac: 0.0     # symbols vary (top or bottom of band)
   symbol_below_slack: 8       # px the symbol may dip below the band
   insert_above: 60            # inserted text floats within this above the symbol
+  insert_min_above: 10        # inserted text starts at least this far above the symbol
   insert_max_dx: 60           # horizontal window around the symbol
   insert_max_width: 120       # inserted text is short (1-2 words)
   insert_max_height: 70       # two-row insertions ("in\nlife") allowed
