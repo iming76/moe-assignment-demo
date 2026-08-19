@@ -4,7 +4,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 ## 1. Monorepo & Foundation
 
-- [ ] 1-Scaffold monorepo: turbo.json, pnpm-workspace.yaml, apps/web (Next.js + TypeScript), packages/types, backend/ skeleton; Python backend stays outside turbo
+- [x] 1-Scaffold monorepo: turbo.json, pnpm-workspace.yaml, apps/web (Next.js + TypeScript), packages/types, backend/ skeleton; Python backend stays outside turbo
 - [ ] 2a-Implement shared data schemas in backend/schemas.py (PageImage, BoundingBox, Question, Paragraph, Crop, OCRResult, LLMReview, full document JSON)
 - [ ] 2b-Implement mirrored TypeScript contract in packages/types matching backend JSON schemas
 - [ ] 3-Implement config module: named constants + YAML loader for paragraph weights, confidence thresholds, gap epsilon, and llm_review settings (enabled: false default)
