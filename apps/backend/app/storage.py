@@ -27,8 +27,6 @@ CROP_TYPE_DIRS = {
     "paragraph": "paragraphs",
     "line": "lines",
     "word": "words",
-    "cancelled": "cancelled",
-    "caret": "carets",
 }
 
 TOP_LEVEL_DIRS = ("originals", "rendered", "processed", "crops", "ocr", "output")

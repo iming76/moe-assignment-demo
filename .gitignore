@@ -11,3 +11,6 @@ storage/
 *.tsbuildinfo
 next-env.d.ts
 .resource
+.env
+.env.*
+!.env.example

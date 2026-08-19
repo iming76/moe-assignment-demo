@@ -12,7 +12,7 @@ import {
   approveDocument,
   artifactUrl,
   fetchDocument,
-  submitCorrection,
+  submitReviewDecision,
 } from "@/lib/api";
 
 type OverlayKey =
@@ -20,9 +20,7 @@ type OverlayKey =
   | "answer"
   | "paragraphs"
   | "lines"
-  | "highlights"
-  | "strikethroughs"
-  | "carets";
+  | "highlights";
 
 const OVERLAY_COLORS: Record<OverlayKey, string> = {
   question: "#4cc9f0",
@@ -30,8 +28,14 @@ const OVERLAY_COLORS: Record<OverlayKey, string> = {
   paragraphs: "#f9c74f",
   lines: "#90be6d",
   highlights: "#ffd60a",
-  strikethroughs: "#ef476f",
-  carets: "#b5179e",
+};
+
+const OVERLAY_TEXT_CLASSES: Record<OverlayKey, string> = {
+  question: "text-[#4cc9f0]",
+  answer: "text-[#80ed99]",
+  paragraphs: "text-[#f9c74f]",
+  lines: "text-[#90be6d]",
+  highlights: "text-[#ffd60a]",
 };
 
 export default function ReviewPage() {
@@ -44,7 +48,7 @@ export default function ReviewPage() {
 
 function ReviewPageInner() {
   const searchParams = useSearchParams();
-  const [docId, setDocId] = useState(searchParams.get("id") ?? "");
+  const docId = searchParams.get("id") ?? "";
   const [doc, setDoc] = useState<Document | null>(null);
   const [error, setError] = useState("");
   const [pageIdx, setPageIdx] = useState(0);
@@ -54,8 +58,6 @@ function ReviewPageInner() {
     paragraphs: true,
     lines: false,
     highlights: true,
-    strikethroughs: true,
-    carets: true,
   });
   const [selected, setSelected] = useState<{
     kind: string;
@@ -80,16 +82,9 @@ function ReviewPageInner() {
   const page: DocumentPage | undefined = doc?.pages[pageIdx];
 
   return (
-    <main style={{ display: "flex", gap: 16, padding: 16, height: "100vh" }}>
-      <section style={{ flex: 2, display: "flex", flexDirection: "column" }}>
-        <header style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <input
-            placeholder="document id (doc_001)"
-            value={docId}
-            onChange={(e) => setDocId(e.target.value)}
-            style={{ padding: 6 }}
-          />
-          <button onClick={() => load(docId)}>Load</button>
+    <main className="flex h-screen gap-4 p-4">
+      <section className="flex flex-2 flex-col">
+        <header className="mb-2 flex gap-2">
           {doc && <span>state: {doc.state}</span>}
           {doc && doc.pages.length > 1 && (
             <select
@@ -104,9 +99,9 @@ function ReviewPageInner() {
             </select>
           )}
         </header>
-        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+        <div className="mb-2 flex gap-1.5">
           {(Object.keys(overlays) as OverlayKey[]).map((k) => (
-            <label key={k} style={{ color: OVERLAY_COLORS[k] }}>
+            <label key={k} className={OVERLAY_TEXT_CLASSES[k]}>
               <input
                 type="checkbox"
                 checked={overlays[k]}
@@ -125,10 +120,10 @@ function ReviewPageInner() {
             onSelect={setSelected}
           />
         )}
-        {error && <p style={{ color: "#ef476f" }}>{error}</p>}
+        {error && <p className="text-[#ef476f]">{error}</p>}
       </section>
 
-      <aside style={{ flex: 1, overflow: "auto" }}>
+      <aside className="flex-1 overflow-auto">
         {doc && page && (
           <ParagraphTree
             doc={doc}
@@ -140,7 +135,7 @@ function ReviewPageInner() {
           />
         )}
         {selected && doc && (
-          <CropInspector docId={doc.documentId} selected={selected} doc={doc} />
+          <CropInspector docId={doc.documentId} selected={selected} doc={doc} onChanged={() => load(docId)} />
         )}
       </aside>
     </main>
@@ -179,23 +174,15 @@ function ImageViewer({
       if (overlays.lines)
         for (const ln of p.lines)
           boxes.push({ key: "lines", bbox: ln.bbox, label: ln.id, kind: "line", cropId: ln.cropId });
-      if (overlays.strikethroughs)
-        for (const m of p.markups)
-          if (m.type === "strikethrough" && m.bbox)
-            boxes.push({ key: "strikethroughs", bbox: m.bbox, label: m.id, kind: "strikethrough", cropId: m.id });
     }
   }
   if (overlays.highlights)
     for (const hl of page.highlights)
       if (hl.bbox) boxes.push({ key: "highlights", bbox: hl.bbox, label: hl.id, kind: "highlight" });
-  if (overlays.carets)
-    for (const c of page.carets)
-      if (c.caret.bbox)
-        boxes.push({ key: "carets", bbox: c.caret.bbox, label: c.id, kind: "caret", cropId: c.id });
 
   return (
     <div
-      style={{ overflow: "hidden", border: "1px solid #333", position: "relative", flex: 1 }}
+      className="relative flex-1 overflow-hidden border border-[#333]"
       onWheel={(e) => setScale((s) => Math.min(3, Math.max(0.2, s - e.deltaY / 1000)))}
       onMouseDown={(e) => (drag.current = { x: e.clientX - offset.x, y: e.clientY - offset.y })}
       onMouseMove={(e) => {
@@ -205,12 +192,15 @@ function ImageViewer({
       onMouseUp={() => (drag.current = null)}
       onMouseLeave={() => (drag.current = null)}
     >
-      <div style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: "0 0", width: w, height: h }}>
+      <div
+        className="origin-top-left"
+        style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, width: w, height: h }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={artifactUrl(docId, page.image.path)} alt="rendered page" style={{ width: w, height: h }} draggable={false} />
-        <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
+        <img src={artifactUrl(docId, page.image.path)} alt="rendered page" width={w} height={h} draggable={false} />
+        <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="pointer-events-none absolute top-0 left-0">
           {boxes.map((b, i) => (
-            <g key={i} style={{ pointerEvents: "all", cursor: "pointer" }} onClick={() => onSelect({ kind: b.kind, bbox: b.bbox, label: b.label, cropId: b.cropId })}>
+            <g key={i} className="pointer-events-auto cursor-pointer" onClick={() => onSelect({ kind: b.kind, bbox: b.bbox, label: b.label, cropId: b.cropId })}>
               <rect
                 x={b.bbox.x}
                 y={b.bbox.y}
@@ -235,10 +225,12 @@ function CropInspector({
   docId,
   selected,
   doc,
+  onChanged,
 }: {
   docId: string;
   selected: { kind: string; bbox: BoundingBox; label: string; cropId?: string };
   doc: Document;
+  onChanged: () => void;
 }) {
   const ocr = selected.cropId
     ? doc.pages.flatMap((p) => p.ocr).find((o) => o.cropId === selected.cropId)
@@ -246,14 +238,14 @@ function CropInspector({
   const cropPath = `crops/${""}`;
   void cropPath;
   return (
-    <div style={{ border: "1px solid #333", padding: 8, marginTop: 12 }}>
+    <div className="mt-3 border border-[#333] p-2">
       <h3>Crop inspector — {selected.label}</h3>
       <p>
         {selected.kind} @ ({selected.bbox.x}, {selected.bbox.y}) {selected.bbox.width}×{selected.bbox.height}
       </p>
       {selected.cropId && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={artifactUrl(docId, cropPathFor(doc, selected.cropId))} alt={selected.label} style={{ maxWidth: "100%" }} />
+        <img src={artifactUrl(docId, cropPathFor(doc, selected.cropId))} alt={selected.label} className="max-w-full" />
       )}
       {ocr && (
         <>
@@ -262,6 +254,10 @@ function CropInspector({
             confidence: {ocr.confidence}{" "}
             {ocr.confidence < 0.7 ? "⚑ review required" : ocr.confidence < 0.9 ? "⚑ review recommended" : ""}
           </p>
+          <p>validation: {ocr.validationState}; review: {ocr.reviewState}</p>
+          {ocr.uncertainty?.length ? <pre>{JSON.stringify(ocr.uncertainty, null, 2)}</pre> : null}
+          <button onClick={async () => { await submitReviewDecision(docId, ocr.cropId, "ocr", "accept"); onChanged(); }}>accept</button>{" "}
+          <button onClick={async () => { await submitReviewDecision(docId, ocr.cropId, "ocr", "reject"); onChanged(); }}>reject</button>
         </>
       )}
     </div>
@@ -287,7 +283,7 @@ function ParagraphTree({
   doc: Document;
   page: DocumentPage;
   selected: { kind: string; bbox: BoundingBox; label: string } | null;
-  onSelect: (s: { kind: string; bbox: BoundingBox; label: string }) => void;
+  onSelect: (s: { kind: string; bbox: BoundingBox; label: string; cropId?: string }) => void;
   onCorrected: () => void;
   onApproved: () => void;
 }) {
@@ -303,7 +299,7 @@ function ParagraphTree({
       {page.answer?.paragraphs.map((p: Paragraph) => (
         <details key={p.id} open>
           <summary
-            style={{ cursor: "pointer", color: "#f9c74f" }}
+            className="cursor-pointer text-[#f9c74f]"
             onClick={() => onSelect({ kind: "paragraph", bbox: p.bbox, label: p.id })}
           >
             {p.id} (order {p.order})
@@ -314,10 +310,10 @@ function ParagraphTree({
             const low = ocr && ocr.confidence < 0.7;
             const mid = ocr && ocr.confidence >= 0.7 && ocr.confidence < 0.9;
             return (
-              <div key={ln.id} style={{ marginLeft: 12, marginBottom: 6 }}>
+              <div key={ln.id} className="mb-1.5 ml-3">
                 <span
-                  style={{ cursor: "pointer", color: low ? "#ef476f" : mid ? "#ffd60a" : "#90be6d" }}
-                  onClick={() => onSelect({ kind: "line", bbox: ln.bbox, label: ln.id })}
+                  className={`cursor-pointer ${low ? "text-[#ef476f]" : mid ? "text-[#ffd60a]" : "text-[#90be6d]"}`}
+                  onClick={() => onSelect({ kind: "line", bbox: ln.bbox, label: ln.id, cropId: ln.cropId })}
                 >
                   {ln.id}
                 </span>{" "}
@@ -328,11 +324,11 @@ function ParagraphTree({
                   placeholder="correction"
                   value={edits[ln.id] ?? ""}
                   onChange={(e) => setEdits({ ...edits, [ln.id]: e.target.value })}
-                  style={{ marginLeft: 8 }}
+                  className="ml-2"
                 />
                 <button
                   onClick={async () => {
-                    await submitCorrection(doc.documentId, ln.cropId, edits[ln.id] ?? "");
+                    await submitReviewDecision(doc.documentId, ln.cropId, "ocr", "correct", edits[ln.id] ?? "");
                     onCorrected();
                   }}
                 >
@@ -344,7 +340,7 @@ function ParagraphTree({
         </details>
       ))}
       <button
-        style={{ marginTop: 12 }}
+        className="mt-3"
         onClick={async () => {
           await approveDocument(doc.documentId);
           onApproved();

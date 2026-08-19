@@ -1,7 +1,7 @@
 /**
  * Shared contract mirroring the Python backend's schemas.py 1:1 — any JSON
  * shape change must land here first. camelCase keys throughout (spec
- * Sections 5.1, 9, 14, 17, 19, 22, 24, 31, 39.1.4).
+ * Sections 5.1, 9, 14, 17, 22, 24, and 31).
  */
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ export interface OCRLine {
 }
 
 // ---------------------------------------------------------------------------
-// Markup
+// Highlight markup
 // ---------------------------------------------------------------------------
 
 /** Spec Section 17. */
@@ -69,21 +69,11 @@ export interface Highlight {
   polygon: Point[];
 }
 
-/** Spec Section 18 — cancelled text region. */
-export interface Strikethrough {
-  id: string;
-  type: "strikethrough";
-  bbox?: BoundingBox;
-  cropPath?: string;
-  strokeBbox?: BoundingBox;
-  lineId?: string;
-}
-
-/** Spec Section 39.1.4 — applied stays false until a human confirms. */
+/** Optional audit record for low-confidence OCR review. */
 export interface LLMReview {
   id: string;
   targetId: string;
-  trigger: "caret_anchor_ambiguity" | "low_confidence";
+  trigger: "low_confidence";
   inputs: {
     cropPaths: string[];
     candidates: string[];
@@ -97,24 +87,6 @@ export interface LLMReview {
   latencyMs: number;
 }
 
-/** Spec Section 19 — caret insertion markup. */
-export interface Caret {
-  id: string;
-  type: "caret";
-  caret: {
-    bbox: BoundingBox;
-  };
-  insertCrop: string;
-  anchorLineId: string;
-  /** Inserted-text region above the caret symbol (internal use). */
-  insertBbox?: BoundingBox;
-  /** Candidate gap indices for ambiguous anchors (rendered as tick marks). */
-  anchorCandidates?: number[];
-  llmReview?: LLMReview;
-}
-
-export type Markup = Strikethrough | Caret;
-
 // ---------------------------------------------------------------------------
 // Crops & OCR
 // ---------------------------------------------------------------------------
@@ -124,9 +96,7 @@ export type CropType =
   | "answer"
   | "paragraph"
   | "line"
-  | "word"
-  | "cancelled"
-  | "caret";
+  | "word";
 
 /** Spec Section 22 — immutable once written. */
 export interface Crop {
@@ -139,10 +109,7 @@ export interface Crop {
   createdAt: string;
 }
 
-export interface OCRCandidate {
-  text: string;
-  confidence: number;
-}
+export interface UncertaintyRange { start: number; end: number; reason?: string; }
 
 /** Spec Section 24 — literal text only, never corrected. */
 export interface OCRResult {
@@ -151,10 +118,15 @@ export interface OCRResult {
   confidence: number;
   model: string;
   tokens?: OCRToken[];
-  /** TrOCR beam-search N-best candidates. */
-  candidates?: OCRCandidate[];
   processingTimeMs?: number;
   llmReview?: LLMReview;
+  requestSchemaVersion?: string;
+  cacheKey?: string;
+  rawResponse?: Record<string, unknown>;
+  uncertainty?: UncertaintyRange[];
+  validationState: "valid" | "invalid" | "unavailable";
+  reviewState: "pending" | "required" | "accepted" | "rejected" | "corrected";
+  reviewRequiredReason?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +142,6 @@ export interface Paragraph {
   cropPath: string;
   lines: OCRLine[];
   highlights: Highlight[];
-  markups: Markup[];
   text: string;
 }
 
@@ -187,7 +158,6 @@ export interface DocumentPage {
   question?: Question;
   answer?: Answer;
   highlights: Highlight[];
-  carets: Caret[];
   crops: Crop[];
   ocr: OCRResult[];
 }
@@ -213,6 +183,11 @@ export interface ReviewCorrection {
   createdAt?: string;
 }
 
+export interface ReviewDecision {
+  id: string; targetId: string; targetType: "ocr";
+  decision: "accept" | "reject" | "correct"; value?: unknown; reason?: string; createdAt?: string;
+}
+
 /** Processing state machine (spec Section 40). */
 export type DocumentState =
   | "UPLOADED"
@@ -236,4 +211,5 @@ export interface Document {
   final: FinalOutput;
   corrections: ReviewCorrection[];
   llmReviews: LLMReview[];
+  reviewDecisions: ReviewDecision[];
 }

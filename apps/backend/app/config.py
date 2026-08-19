@@ -4,8 +4,8 @@ Every magic number in the pipeline is a named constant here or an entry in
 config.yaml. `load_config()` returns a typed Config; missing keys fall back
 to the named defaults so the pipeline always runs with sane values.
 
-Spec references: Section 12 (paragraph weights), Section 35 (confidence
-thresholds), Section 39.1.6 (llm_review YAML shape).
+Spec references: Section 12 (paragraph weights) and Section 35 (confidence
+thresholds).
 """
 
 from __future__ import annotations
@@ -48,65 +48,6 @@ class HighlightConfig:
     min_area: int = DEFAULT_HIGHLIGHT_MIN_AREA
 
 
-# TrOCR (spec Sections 23-24).
-DEFAULT_OCR_MAX_NEW_TOKENS = 128
-
-
-@dataclass(frozen=True)
-class OCRConfig:
-    max_new_tokens: int = DEFAULT_OCR_MAX_NEW_TOKENS
-
-
-# Caret detection (spec Section 19).
-DEFAULT_CARET_SYMBOL_MIN = 5          # px; caret symbol component size window
-DEFAULT_CARET_SYMBOL_MAX = 35
-DEFAULT_CARET_SYMBOL_MIN_AREA = 20
-DEFAULT_CARET_SYMBOL_MAX_AREA = 600
-DEFAULT_CARET_SYMBOL_BOTTOM_FRAC = 0.0   # symbols vary (top or bottom of band)
-DEFAULT_CARET_SYMBOL_BELOW_SLACK = 8     # px the symbol may dip below the band
-DEFAULT_CARET_INSERT_ABOVE = 60          # inserted text floats within this above the symbol
-DEFAULT_CARET_INSERT_MIN_ABOVE = 10      # inserted text starts at least this far above the symbol
-DEFAULT_CARET_INSERT_MAX_DX = 60         # horizontal window around the symbol
-DEFAULT_CARET_INSERT_MAX_WIDTH = 120     # inserted text is short (1-2 words)
-DEFAULT_CARET_INSERT_MAX_HEIGHT = 70     # two-row insertions ("in\nlife") allowed
-
-
-@dataclass(frozen=True)
-class CaretConfig:
-    symbol_min: int = DEFAULT_CARET_SYMBOL_MIN
-    symbol_max: int = DEFAULT_CARET_SYMBOL_MAX
-    symbol_min_area: int = DEFAULT_CARET_SYMBOL_MIN_AREA
-    symbol_max_area: int = DEFAULT_CARET_SYMBOL_MAX_AREA
-    symbol_bottom_frac: float = DEFAULT_CARET_SYMBOL_BOTTOM_FRAC
-    symbol_below_slack: int = DEFAULT_CARET_SYMBOL_BELOW_SLACK
-    insert_above: int = DEFAULT_CARET_INSERT_ABOVE
-    insert_min_above: int = DEFAULT_CARET_INSERT_MIN_ABOVE
-    insert_max_dx: int = DEFAULT_CARET_INSERT_MAX_DX
-    insert_max_width: int = DEFAULT_CARET_INSERT_MAX_WIDTH
-    insert_max_height: int = DEFAULT_CARET_INSERT_MAX_HEIGHT
-
-
-# Strikethrough detection (spec Section 18).
-DEFAULT_STRIKE_OPEN_KERNEL = 25     # horizontal open: keeps long horizontal runs
-DEFAULT_STRIKE_MIN_STROKE_LEN = 80  # px; longer than any word
-DEFAULT_STRIKE_MAX_THICKNESS = 20   # px; joined multi-pass strikes stay thin
-DEFAULT_STRIKE_JOIN_GAP = 20        # px horizontal gap joined across fragments
-DEFAULT_STRIKE_JOIN_HEIGHT = 9      # px vertical gap joined (diagonal strokes)
-DEFAULT_STRIKE_MIN_ASPECT = 3       # width/height ratio for near-horizontal strokes
-DEFAULT_STRIKE_MIN_CROSSED_GAP = 6  # stroke must cross inter-word space
-
-
-@dataclass(frozen=True)
-class StrikethroughConfig:
-    open_kernel: int = DEFAULT_STRIKE_OPEN_KERNEL
-    min_stroke_len: int = DEFAULT_STRIKE_MIN_STROKE_LEN
-    max_stroke_thickness: int = DEFAULT_STRIKE_MAX_THICKNESS
-    join_gap: int = DEFAULT_STRIKE_JOIN_GAP
-    join_height: int = DEFAULT_STRIKE_JOIN_HEIGHT
-    min_aspect: int = DEFAULT_STRIKE_MIN_ASPECT
-    min_crossed_gap: int = DEFAULT_STRIKE_MIN_CROSSED_GAP
-
-
 # Answer region detection (spec Section 10).
 DEFAULT_ANSWER_TRIM_DENSITY_RATIO = 0.25  # edge lines below this * median density are specks
 DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX = 60    # lines starting this far left of the margin
@@ -119,16 +60,15 @@ DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than t
 DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD = 0.90
 DEFAULT_CONFIDENCE_REVIEW_THRESHOLD = 0.70
 
-# Caret anchor ambiguity epsilon (spec Sections 39.1.2, 39.1.6).
-DEFAULT_GAP_EPSILON_PX = 8
-
-# LLM review defaults (spec Section 39.1.6) — disabled by default.
-DEFAULT_LLM_ENABLED = False
-DEFAULT_LLM_MODEL = ""
-DEFAULT_LLM_BATCH = True
-DEFAULT_LLM_MAX_CALLS_PER_PAGE = 10
-DEFAULT_LLM_CACHE = True
-DEFAULT_LLM_INCLUDE_REVIEW_RECOMMENDED = False
+# OpenAI Vision LLM transcription.
+DEFAULT_VISION_PROVIDER = "openai"
+DEFAULT_VISION_MODEL = "gpt-5.4-mini"
+DEFAULT_VISION_ENDPOINT = "https://api.openai.com/v1/responses"
+DEFAULT_VISION_API_KEY_ENV = "OPENAI_API_KEY"
+DEFAULT_VISION_SCHEMA_VERSION = "vision-ocr-v1"
+DEFAULT_VISION_PROMPT_VERSION = "literal-v3"
+DEFAULT_VISION_MAX_CALLS_PER_PAGE = 50
+DEFAULT_VISION_CACHE = True
 
 DEFAULT_STORAGE_ROOT = "storage"
 
@@ -222,39 +162,15 @@ class ConfidenceConfig:
 
 
 @dataclass(frozen=True)
-class CaretAnchorConfig:
-    gap_epsilon_px: float = DEFAULT_GAP_EPSILON_PX
-
-
-@dataclass(frozen=True)
-class LLMTriggerLowConfidenceConfig:
-    threshold: float = DEFAULT_CONFIDENCE_REVIEW_THRESHOLD
-    include_review_recommended: bool = DEFAULT_LLM_INCLUDE_REVIEW_RECOMMENDED
-
-
-@dataclass(frozen=True)
-class LLMTriggerCaretAnchorConfig:
-    gap_epsilon_px: float = DEFAULT_GAP_EPSILON_PX
-
-
-@dataclass(frozen=True)
-class LLMTriggersConfig:
-    caret_anchor: LLMTriggerCaretAnchorConfig = field(
-        default_factory=LLMTriggerCaretAnchorConfig
-    )
-    low_confidence: LLMTriggerLowConfidenceConfig = field(
-        default_factory=LLMTriggerLowConfidenceConfig
-    )
-
-
-@dataclass(frozen=True)
-class LLMReviewConfig:
-    enabled: bool = DEFAULT_LLM_ENABLED
-    model: str = DEFAULT_LLM_MODEL
-    triggers: LLMTriggersConfig = field(default_factory=LLMTriggersConfig)
-    batch: bool = DEFAULT_LLM_BATCH
-    max_calls_per_page: int = DEFAULT_LLM_MAX_CALLS_PER_PAGE
-    cache: bool = DEFAULT_LLM_CACHE
+class VisionLLMConfig:
+    provider: str = DEFAULT_VISION_PROVIDER
+    model: str = DEFAULT_VISION_MODEL
+    endpoint: str = DEFAULT_VISION_ENDPOINT
+    api_key_env: str = DEFAULT_VISION_API_KEY_ENV
+    request_schema_version: str = DEFAULT_VISION_SCHEMA_VERSION
+    prompt_version: str = DEFAULT_VISION_PROMPT_VERSION
+    max_calls_per_page: int = DEFAULT_VISION_MAX_CALLS_PER_PAGE
+    cache: bool = DEFAULT_VISION_CACHE
 
 
 @dataclass(frozen=True)
@@ -303,12 +219,8 @@ class Config:
     question: QuestionConfig = field(default_factory=QuestionConfig)
     answer: AnswerConfig = field(default_factory=AnswerConfig)
     highlight: HighlightConfig = field(default_factory=HighlightConfig)
-    strikethrough: StrikethroughConfig = field(default_factory=StrikethroughConfig)
-    caret: CaretConfig = field(default_factory=CaretConfig)
-    ocr: OCRConfig = field(default_factory=OCRConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
-    caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
-    llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
+    vision_llm: VisionLLMConfig = field(default_factory=VisionLLMConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
     preprocess: PreprocessConfig = field(default_factory=PreprocessConfig)
@@ -357,38 +269,6 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
     )
 
 
-def _load_ocr(raw: dict[str, Any]) -> OCRConfig:
-    return OCRConfig(max_new_tokens=_int(raw, "max_new_tokens", DEFAULT_OCR_MAX_NEW_TOKENS))
-
-
-def _load_caret(raw: dict[str, Any]) -> CaretConfig:
-    return CaretConfig(
-        symbol_min=_int(raw, "symbol_min", DEFAULT_CARET_SYMBOL_MIN),
-        symbol_max=_int(raw, "symbol_max", DEFAULT_CARET_SYMBOL_MAX),
-        symbol_min_area=_int(raw, "symbol_min_area", DEFAULT_CARET_SYMBOL_MIN_AREA),
-        symbol_max_area=_int(raw, "symbol_max_area", DEFAULT_CARET_SYMBOL_MAX_AREA),
-        symbol_bottom_frac=_num(raw, "symbol_bottom_frac", DEFAULT_CARET_SYMBOL_BOTTOM_FRAC),
-        symbol_below_slack=_int(raw, "symbol_below_slack", DEFAULT_CARET_SYMBOL_BELOW_SLACK),
-        insert_above=_int(raw, "insert_above", DEFAULT_CARET_INSERT_ABOVE),
-        insert_min_above=_int(raw, "insert_min_above", DEFAULT_CARET_INSERT_MIN_ABOVE),
-        insert_max_dx=_int(raw, "insert_max_dx", DEFAULT_CARET_INSERT_MAX_DX),
-        insert_max_width=_int(raw, "insert_max_width", DEFAULT_CARET_INSERT_MAX_WIDTH),
-        insert_max_height=_int(raw, "insert_max_height", DEFAULT_CARET_INSERT_MAX_HEIGHT),
-    )
-
-
-def _load_strikethrough(raw: dict[str, Any]) -> StrikethroughConfig:
-    return StrikethroughConfig(
-        open_kernel=_int(raw, "open_kernel", DEFAULT_STRIKE_OPEN_KERNEL),
-        min_stroke_len=_int(raw, "min_stroke_len", DEFAULT_STRIKE_MIN_STROKE_LEN),
-        max_stroke_thickness=_int(raw, "max_stroke_thickness", DEFAULT_STRIKE_MAX_THICKNESS),
-        join_gap=_int(raw, "join_gap", DEFAULT_STRIKE_JOIN_GAP),
-        join_height=_int(raw, "join_height", DEFAULT_STRIKE_JOIN_HEIGHT),
-        min_aspect=_int(raw, "min_aspect", DEFAULT_STRIKE_MIN_ASPECT),
-        min_crossed_gap=_int(raw, "min_crossed_gap", DEFAULT_STRIKE_MIN_CROSSED_GAP),
-    )
-
-
 def _load_highlight(raw: dict[str, Any]) -> HighlightConfig:
     return HighlightConfig(
         hue_min=_int(raw, "hue_min", DEFAULT_HIGHLIGHT_HUE_MIN),
@@ -417,36 +297,15 @@ def _load_confidence(raw: dict[str, Any]) -> ConfidenceConfig:
     )
 
 
-def _load_caret_anchor(raw: dict[str, Any]) -> CaretAnchorConfig:
-    return CaretAnchorConfig(
-        gap_epsilon_px=_num(raw, "gap_epsilon_px", DEFAULT_GAP_EPSILON_PX)
-    )
-
-
-def _load_llm_review(raw: dict[str, Any]) -> LLMReviewConfig:
-    triggers_raw = raw.get("triggers", {}) or {}
-    caret_raw = triggers_raw.get("caret_anchor", {}) or {}
-    low_raw = triggers_raw.get("low_confidence", {}) or {}
-    triggers = LLMTriggersConfig(
-        caret_anchor=LLMTriggerCaretAnchorConfig(
-            gap_epsilon_px=_num(caret_raw, "gap_epsilon_px", DEFAULT_GAP_EPSILON_PX)
-        ),
-        low_confidence=LLMTriggerLowConfidenceConfig(
-            threshold=_num(low_raw, "threshold", DEFAULT_CONFIDENCE_REVIEW_THRESHOLD),
-            include_review_recommended=_bool(
-                low_raw,
-                "include_review_recommended",
-                DEFAULT_LLM_INCLUDE_REVIEW_RECOMMENDED,
-            ),
-        ),
-    )
-    return LLMReviewConfig(
-        enabled=_bool(raw, "enabled", DEFAULT_LLM_ENABLED),
-        model=str(raw.get("model", DEFAULT_LLM_MODEL)),
-        triggers=triggers,
-        batch=_bool(raw, "batch", DEFAULT_LLM_BATCH),
-        max_calls_per_page=_int(raw, "max_calls_per_page", DEFAULT_LLM_MAX_CALLS_PER_PAGE),
-        cache=_bool(raw, "cache", DEFAULT_LLM_CACHE),
+def _load_vision_llm(raw: dict[str, Any]) -> VisionLLMConfig:
+    return VisionLLMConfig(
+        provider=str(raw.get("provider", DEFAULT_VISION_PROVIDER)),
+        model=str(raw.get("model", DEFAULT_VISION_MODEL)), endpoint=str(raw.get("endpoint", DEFAULT_VISION_ENDPOINT)),
+        api_key_env=str(raw.get("api_key_env", DEFAULT_VISION_API_KEY_ENV)),
+        request_schema_version=str(raw.get("request_schema_version", DEFAULT_VISION_SCHEMA_VERSION)),
+        prompt_version=str(raw.get("prompt_version", DEFAULT_VISION_PROMPT_VERSION)),
+        max_calls_per_page=_int(raw, "max_calls_per_page", DEFAULT_VISION_MAX_CALLS_PER_PAGE),
+        cache=_bool(raw, "cache", DEFAULT_VISION_CACHE),
     )
 
 
@@ -511,12 +370,8 @@ def load_config(path: Optional[Path] = None) -> Config:
         question=_load_question(raw.get("question", {}) or {}),
         answer=_load_answer(raw.get("answer", {}) or {}),
         highlight=_load_highlight(raw.get("highlight", {}) or {}),
-        strikethrough=_load_strikethrough(raw.get("strikethrough", {}) or {}),
-        caret=_load_caret(raw.get("caret", {}) or {}),
-        ocr=_load_ocr(raw.get("ocr", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
-        caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
-        llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),
+        vision_llm=_load_vision_llm(raw.get("vision_llm", {}) or {}),
         storage=_load_storage(raw.get("storage", {}) or {}),
         ingestion=_load_ingestion(raw.get("ingestion", {}) or {}),
         preprocess=_load_preprocess(raw.get("preprocess", {}) or {}),

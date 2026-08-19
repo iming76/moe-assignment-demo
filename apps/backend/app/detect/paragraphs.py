@@ -78,7 +78,6 @@ def detect_paragraphs(
                 cropPath="",  # filled by crop_generator
                 lines=[],
                 highlights=[],
-                markups=[],
                 text="",
             )
         )

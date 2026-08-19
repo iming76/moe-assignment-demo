@@ -27,6 +27,27 @@ class LineRegion:
     ink_area: int  # ink pixel count inside the bbox
 
 
+def ruled_line_bands(ink: np.ndarray) -> list[tuple[int, int]]:
+    """Return inclusive vertical spans of full-width ruled-paper lines."""
+    cfg = CONFIG.segment
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (cfg.rule_kernel_width, 1))
+    rules = cv2.morphologyEx(ink, cv2.MORPH_OPEN, kernel)
+    rules = cv2.dilate(rules, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 3)))
+    active_rows = (rules > 0).any(axis=1)
+
+    bands: list[tuple[int, int]] = []
+    start: int | None = None
+    for y, active in enumerate(active_rows):
+        if active and start is None:
+            start = y
+        elif not active and start is not None:
+            bands.append((start, y - 1))
+            start = None
+    if start is not None:
+        bands.append((start, len(active_rows) - 1))
+    return bands
+
+
 def remove_ruled_lines(ink: np.ndarray) -> np.ndarray:
     """Zero out full-width thin horizontal rules (ruled paper).
 
@@ -37,7 +58,7 @@ def remove_ruled_lines(ink: np.ndarray) -> np.ndarray:
     cfg = CONFIG.segment
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (cfg.rule_kernel_width, 1))
     rules = cv2.morphologyEx(ink, cv2.MORPH_OPEN, kernel)
-    # recover the full rule thickness around the extracted centre line
+    # Recover the full rule thickness around the extracted centre line.
     rules = cv2.dilate(rules, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 3)))
     return cv2.subtract(ink, rules)
 
@@ -159,7 +180,9 @@ def segment_words(ink: np.ndarray, line_bbox: BoundingBox) -> list[BoundingBox]:
     return [w for w in words if w.width >= cfg.min_word_width]
 
 
-def _word_from_cols(band: np.ndarray, x0: int, x1: int, line_bbox: BoundingBox) -> BoundingBox:
+def _word_from_cols(
+    band: np.ndarray, x0: int, x1: int, line_bbox: BoundingBox
+) -> BoundingBox:
     sub = band[:, x0 : x1 + 1]
     rows = np.nonzero(sub.any(axis=1))[0]
     y0, y1 = int(rows.min()), int(rows.max())

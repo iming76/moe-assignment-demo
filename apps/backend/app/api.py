@@ -26,7 +26,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from .config import CONFIG
 from .pipeline import finalize_document, process_document
-from .review import submit_correction
+from .review import record_review_decision, submit_correction
 from .schemas import Document
 from .storage import StorageLayout
 
@@ -177,3 +177,16 @@ async def approve_document(document_id: str) -> dict:
     layout = _layout(document_id)
     rel = finalize_document(document, layout)
     return {"state": document.state, "output": rel}
+
+
+@app.post("/documents/{document_id}/review-decisions")
+async def post_review_decision(document_id: str, payload: dict) -> dict:
+    document = _documents.get(document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Unknown document")
+    try:
+        decision = record_review_decision(document, payload["targetId"], payload["targetType"],
+                                          payload["decision"], payload.get("value"), payload.get("reason", ""))
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return decision.to_json()

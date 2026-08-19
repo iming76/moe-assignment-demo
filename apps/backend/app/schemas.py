@@ -4,7 +4,7 @@ Single source of truth for all pipeline data structures. Mirrored 1:1 by
 packages/types/src/index.ts — any shape change must land in both.
 
 Plain dataclasses with camelCase JSON keys (per spec Sections 5.1, 9, 14,
-17, 19, 22, 24, 31, 39.1.4). Helpers: to_json / from_json on every schema.
+17, 22, 24, 31). Helpers: to_json / from_json on every schema.
 """
 
 from __future__ import annotations
@@ -87,7 +87,7 @@ class Question:
     confidence: Optional[float] = None
 
     def to_json(self) -> dict[str, Any]:
-        d = {
+        d: dict[str, Any] = {
             "id": self.id,
             "bbox": self.bbox.to_json(),
             "cropPath": self.cropPath,
@@ -136,7 +136,7 @@ class OCRLine:
     confidence: Optional[float] = None
 
     def to_json(self) -> dict[str, Any]:
-        d = {
+        d: dict[str, Any] = {
             "id": self.id,
             "bbox": self.bbox.to_json(),
             "cropId": self.cropId,
@@ -190,47 +190,12 @@ class Highlight:
 
 
 @dataclass
-class Strikethrough:
-    """Spec Section 18 — cancelled text region."""
-
-    id: str
-    type: str = "strikethrough"
-    bbox: Optional[BoundingBox] = None
-    cropPath: Optional[str] = None
-    strokeBbox: Optional[BoundingBox] = None
-    lineId: Optional[str] = None
-
-    def to_json(self) -> dict[str, Any]:
-        d: dict[str, Any] = {"id": self.id, "type": self.type}
-        if self.bbox is not None:
-            d["bbox"] = self.bbox.to_json()
-        if self.cropPath is not None:
-            d["cropPath"] = self.cropPath
-        if self.strokeBbox is not None:
-            d["strokeBbox"] = self.strokeBbox.to_json()
-        if self.lineId is not None:
-            d["lineId"] = self.lineId
-        return d
-
-    @staticmethod
-    def from_json(d: dict[str, Any]) -> "Strikethrough":
-        return Strikethrough(
-            id=d["id"],
-            type=d.get("type", "strikethrough"),
-            bbox=BoundingBox.from_json(d["bbox"]) if d.get("bbox") else None,
-            cropPath=d.get("cropPath"),
-            strokeBbox=BoundingBox.from_json(d["strokeBbox"]) if d.get("strokeBbox") else None,
-            lineId=d.get("lineId"),
-        )
-
-
-@dataclass
 class LLMReview:
-    """Spec Section 39.1.4 — applied stays false until a human confirms."""
+    """Optional audit record for model-assisted OCR review."""
 
     id: str
     targetId: str
-    trigger: str  # "caret_anchor_ambiguity" | "low_confidence"
+    trigger: str  # "low_confidence"
     inputs: dict[str, Any] = field(default_factory=dict)  # cropPaths, candidates
     rawResponse: Optional[dict[str, Any]] = None
     chosen: Any = None  # candidate / anchor index chosen
@@ -270,62 +235,6 @@ class LLMReview:
         )
 
 
-@dataclass
-class Caret:
-    """Spec Section 19 — caret insertion markup."""
-
-    id: str
-    type: str = "caret"
-    caret: dict[str, Any] = field(default_factory=dict)  # {"bbox": {...}}
-    insertCrop: str = ""
-    anchorLineId: str = ""
-    insertBbox: Optional[BoundingBox] = None
-    anchorCandidates: list[int] = field(default_factory=list)
-    llmReview: Optional[LLMReview] = None
-
-    def to_json(self) -> dict[str, Any]:
-        d: dict[str, Any] = {
-            "id": self.id,
-            "type": self.type,
-            "caret": dict(self.caret),
-            "insertCrop": self.insertCrop,
-            "anchorLineId": self.anchorLineId,
-        }
-        if self.insertBbox is not None:
-            d["insertBbox"] = self.insertBbox.to_json()
-        if self.anchorCandidates:
-            d["anchorCandidates"] = list(self.anchorCandidates)
-        if self.llmReview is not None:
-            d["llmReview"] = self.llmReview.to_json()
-        return d
-
-    @staticmethod
-    def from_json(d: dict[str, Any]) -> "Caret":
-        return Caret(
-            id=d["id"],
-            type=d.get("type", "caret"),
-            caret=dict(d.get("caret", {})),
-            insertCrop=d.get("insertCrop", ""),
-            anchorLineId=d.get("anchorLineId", ""),
-            insertBbox=BoundingBox.from_json(d["insertBbox"]) if d.get("insertBbox") else None,
-            anchorCandidates=list(d.get("anchorCandidates", [])),
-            llmReview=LLMReview.from_json(d["llmReview"]) if d.get("llmReview") else None,
-        )
-
-
-# Markup union for Paragraph.markups
-Markup = Strikethrough | Caret
-
-MARKUP_TYPES = {"strikethrough": Strikethrough, "caret": Caret}
-
-
-def markup_from_json(d: dict[str, Any]) -> Markup:
-    cls = MARKUP_TYPES.get(d.get("type", ""))
-    if cls is None:
-        raise ValueError(f"Unknown markup type: {d.get('type')!r}")
-    return cls.from_json(d)
-
-
 # ---------------------------------------------------------------------------
 # Crops & OCR
 # ---------------------------------------------------------------------------
@@ -336,8 +245,6 @@ CROP_TYPES = (
     "paragraph",
     "line",
     "word",
-    "cancelled",
-    "caret",
 )
 
 
@@ -380,6 +287,20 @@ class Crop:
 
 
 @dataclass
+class UncertaintyRange:
+    start: int
+    end: int
+    reason: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "UncertaintyRange":
+        return UncertaintyRange(start=int(d["start"]), end=int(d["end"]), reason=d.get("reason", ""))
+
+
+@dataclass
 class OCRResult:
     """Spec Section 24 — literal text only, never corrected."""
 
@@ -388,9 +309,15 @@ class OCRResult:
     confidence: float
     model: str
     tokens: list[OCRToken] = field(default_factory=list)
-    candidates: list[dict[str, Any]] = field(default_factory=list)  # N-best: [{"text","confidence"}]
     processingTimeMs: Optional[int] = None
     llmReview: Optional[LLMReview] = None
+    requestSchemaVersion: str = ""
+    cacheKey: str = ""
+    rawResponse: Optional[dict[str, Any]] = None
+    uncertainty: list[UncertaintyRange] = field(default_factory=list)
+    validationState: str = "valid"
+    reviewState: str = "pending"
+    reviewRequiredReason: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
         d = {
@@ -401,12 +328,22 @@ class OCRResult:
         }
         if self.tokens:
             d["tokens"] = [t.to_json() for t in self.tokens]
-        if self.candidates:
-            d["candidates"] = list(self.candidates)
         if self.processingTimeMs is not None:
             d["processingTimeMs"] = self.processingTimeMs
         if self.llmReview is not None:
             d["llmReview"] = self.llmReview.to_json()
+        if self.requestSchemaVersion:
+            d["requestSchemaVersion"] = self.requestSchemaVersion
+        if self.cacheKey:
+            d["cacheKey"] = self.cacheKey
+        if self.rawResponse is not None:
+            d["rawResponse"] = self.rawResponse
+        if self.uncertainty:
+            d["uncertainty"] = [u.to_json() for u in self.uncertainty]
+        d["validationState"] = self.validationState
+        d["reviewState"] = self.reviewState
+        if self.reviewRequiredReason is not None:
+            d["reviewRequiredReason"] = self.reviewRequiredReason
         return d
 
     @staticmethod
@@ -417,9 +354,13 @@ class OCRResult:
             confidence=d["confidence"],
             model=d["model"],
             tokens=[OCRToken.from_json(t) for t in d.get("tokens", [])],
-            candidates=list(d.get("candidates", [])),
             processingTimeMs=d.get("processingTimeMs"),
             llmReview=LLMReview.from_json(d["llmReview"]) if d.get("llmReview") else None,
+            requestSchemaVersion=d.get("requestSchemaVersion", ""), cacheKey=d.get("cacheKey", ""),
+            rawResponse=d.get("rawResponse"),
+            uncertainty=[UncertaintyRange.from_json(u) for u in d.get("uncertainty", [])],
+            validationState=d.get("validationState", "valid"), reviewState=d.get("reviewState", "pending"),
+            reviewRequiredReason=d.get("reviewRequiredReason"),
         )
 
 
@@ -439,7 +380,6 @@ class Paragraph:
     cropPath: str
     lines: list[OCRLine] = field(default_factory=list)
     highlights: list[Highlight] = field(default_factory=list)
-    markups: list[Markup] = field(default_factory=list)
     text: str = ""
 
     def to_json(self) -> dict[str, Any]:
@@ -451,7 +391,6 @@ class Paragraph:
             "cropPath": self.cropPath,
             "lines": [ln.to_json() for ln in self.lines],
             "highlights": [h.to_json() for h in self.highlights],
-            "markups": [m.to_json() for m in self.markups],
             "text": self.text,
         }
 
@@ -465,7 +404,6 @@ class Paragraph:
             cropPath=d["cropPath"],
             lines=[OCRLine.from_json(ln) for ln in d.get("lines", [])],
             highlights=[Highlight.from_json(h) for h in d.get("highlights", [])],
-            markups=[markup_from_json(m) for m in d.get("markups", [])],
             text=d.get("text", ""),
         )
 
@@ -505,7 +443,6 @@ class DocumentPage:
     question: Optional[Question] = None
     answer: Optional[Answer] = None
     highlights: list[Highlight] = field(default_factory=list)
-    carets: list[Caret] = field(default_factory=list)
     crops: list[Crop] = field(default_factory=list)
     ocr: list[OCRResult] = field(default_factory=list)
 
@@ -519,7 +456,6 @@ class DocumentPage:
         if self.answer is not None:
             d["answer"] = self.answer.to_json()
         d["highlights"] = [h.to_json() for h in self.highlights]
-        d["carets"] = [c.to_json() for c in self.carets]
         d["crops"] = [c.to_json() for c in self.crops]
         d["ocr"] = [o.to_json() for o in self.ocr]
         return d
@@ -532,7 +468,6 @@ class DocumentPage:
             question=Question.from_json(d["question"]) if d.get("question") else None,
             answer=Answer.from_json(d["answer"]) if d.get("answer") else None,
             highlights=[Highlight.from_json(h) for h in d.get("highlights", [])],
-            carets=[Caret.from_json(c) for c in d.get("carets", [])],
             crops=[Crop.from_json(c) for c in d.get("crops", [])],
             ocr=[OCRResult.from_json(o) for o in d.get("ocr", [])],
         )
@@ -593,6 +528,26 @@ class ReviewCorrection:
 
 
 @dataclass
+class ReviewDecision:
+    id: str
+    targetId: str
+    targetType: str
+    decision: str
+    value: Any = None
+    reason: str = ""
+    createdAt: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @staticmethod
+    def from_json(d: dict[str, Any]) -> "ReviewDecision":
+        return ReviewDecision(id=d["id"], targetId=d["targetId"], targetType=d["targetType"],
+                              decision=d["decision"], value=d.get("value"), reason=d.get("reason", ""),
+                              createdAt=d.get("createdAt", ""))
+
+
+@dataclass
 class Document:
     """Complete internal JSON (spec Section 31)."""
 
@@ -603,6 +558,7 @@ class Document:
     final: FinalOutput = field(default_factory=FinalOutput)
     corrections: list[ReviewCorrection] = field(default_factory=list)
     llmReviews: list[LLMReview] = field(default_factory=list)
+    reviewDecisions: list[ReviewDecision] = field(default_factory=list)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -613,6 +569,7 @@ class Document:
             "final": self.final.to_json(),
             "corrections": [c.to_json() for c in self.corrections],
             "llmReviews": [r.to_json() for r in self.llmReviews],
+            "reviewDecisions": [r.to_json() for r in self.reviewDecisions],
         }
 
     @staticmethod
@@ -625,6 +582,7 @@ class Document:
             final=FinalOutput.from_json(d.get("final", {})),
             corrections=[ReviewCorrection.from_json(c) for c in d.get("corrections", [])],
             llmReviews=[LLMReview.from_json(r) for r in d.get("llmReviews", [])],
+            reviewDecisions=[ReviewDecision.from_json(r) for r in d.get("reviewDecisions", [])],
         )
 
 

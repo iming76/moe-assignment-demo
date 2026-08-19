@@ -27,12 +27,10 @@ orchestrator; shared structures live in `app/schemas.py` (mirrored by
         answers.py             answer region detection
         paragraphs.py          paragraph boundary detection/splitting
         highlights.py          highlight detection
-        strikethroughs.py      strikethrough detection
-        carets.py               caret detection
       ocr/
-        trocr.py               TrOCR over line crops (literal text only)
-        reconstruct.py         OCR + spatial + markup → final JSON
-        llm_review.py          optional gated LLM ambiguity review
+        vision_llm.py          OpenAI Vision over line crops
+        prompts/               versioned Vision LLM prompt text
+        reconstruct.py         line OCR → final JSON
 
 `storage/` (runtime document data) stays at the package root, alongside
 `pyproject.toml`/`uv.lock`, since it's generated output rather than source.

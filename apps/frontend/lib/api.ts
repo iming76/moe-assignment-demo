@@ -81,3 +81,15 @@ export async function approveDocument(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function submitReviewDecision(
+  id: string, targetId: string, targetType: "ocr",
+  decision: "accept" | "reject" | "correct", value?: unknown
+): Promise<unknown> {
+  const res = await fetch(`${API_BASE}/documents/${id}/review-decisions`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetId, targetType, decision, value }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

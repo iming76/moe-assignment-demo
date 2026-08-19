@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from .config import CONFIG
-from .schemas import Document, ReviewCorrection
+from .schemas import Document, ReviewCorrection, ReviewDecision
 from .state_machine import transition
 from .storage import StorageLayout
 
@@ -65,6 +65,38 @@ def submit_correction(
     )
     document.corrections.append(correction)
     return correction
+
+
+def record_review_decision(
+    document: Document, target_id: str, target_type: str, decision: str,
+    value=None, reason: str = "",
+) -> ReviewDecision:
+    """Record an accept/reject/manual decision and update the target state."""
+    if document.state != "REVIEW_REQUIRED":
+        raise ValueError("Review decisions require REVIEW_REQUIRED state")
+    if decision not in {"accept", "reject", "correct"}:
+        raise ValueError("decision must be accept, reject, or correct")
+    found = False
+    if target_type == "ocr":
+        for page in document.pages:
+            for result in page.ocr:
+                if result.cropId != target_id:
+                    continue
+                found = True
+                result.reviewState = {"accept": "accepted", "reject": "rejected", "correct": "corrected"}[decision]
+                if decision == "correct":
+                    if not isinstance(value, str):
+                        raise ValueError("OCR correction value must be text")
+                    submit_correction(document, target_id, value, reason)
+    else:
+        raise ValueError("targetType must be ocr")
+    if not found:
+        raise ValueError(f"Unknown review target: {target_id}")
+    review = ReviewDecision(id=f"decision_{len(document.reviewDecisions) + 1:03d}", targetId=target_id,
+                            targetType=target_type, decision=decision, value=value, reason=reason,
+                            createdAt=datetime.now(timezone.utc).isoformat())
+    document.reviewDecisions.append(review)
+    return review
 
 
 def apply_corrections(document: Document) -> Document:

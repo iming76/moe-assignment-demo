@@ -96,53 +96,39 @@ export default function Home() {
   };
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>Handwritten Script OCR</h1>
-      <p style={{ color: "var(--muted)", marginBottom: "2rem" }}>
-        Upload an image or PDF to start the pipeline
-      </p>
+    <main className="mx-auto max-w-[600px] p-8">
+      <h1>Handwritten OCR</h1>
+      <p className="mb-8 text-muted">Upload an image or PDF to start the pipeline</p>
 
       {!isUploading && (
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          style={{
-            border: isDragging ? "2px dashed var(--fg)" : "2px dashed var(--muted)",
-            borderRadius: "8px",
-            padding: "3rem 2rem",
-            textAlign: "center",
-            backgroundColor: isDragging ? "rgba(255, 255, 255, 0.05)" : "transparent",
-            transition: "border-color 0.2s, background-color 0.2s",
-            cursor: "pointer",
-          }}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
+            isDragging ? "border-fg bg-white/5" : "border-muted bg-transparent"
+          }`}
         >
           <input
             type="file"
             id="file-upload"
             accept="image/png,image/jpeg,application/pdf"
             onChange={handleFileSelect}
-            style={{ display: "none" }}
+            className="hidden"
           />
           <label
             htmlFor="file-upload"
-            style={{
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "1rem",
-            }}
+            className="flex cursor-pointer flex-col items-center gap-4"
           >
             <div>
-              <p style={{ fontSize: "1.25rem", fontWeight: "bold", margin: "0 0 0.5rem 0" }}>
+              <p className="m-0 mb-2 text-xl font-bold">
                 {selectedFile
                   ? selectedFile.name
                   : isDragging
                     ? "Drop your file here"
                     : "Drag & drop or click to upload"}
               </p>
-              <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.875rem" }}>
+              <p className="m-0 text-sm text-muted">
                 Support for PNG, JPG, and PDF files
               </p>
             </div>
@@ -154,68 +140,35 @@ export default function Home() {
         <button
           type="button"
           onClick={handleSubmit}
-          style={{
-            marginTop: "1.5rem",
-            width: "100%",
-            padding: "0.875rem",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "var(--fg)",
-            color: "var(--bg)",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
+          className="mt-6 w-full cursor-pointer rounded-lg border-none bg-fg p-3.5 text-base font-bold text-bg"
         >
           Submit
         </button>
       )}
 
       {error && (
-        <p
-          style={{
-            color: "#ef476f",
-            backgroundColor: "rgba(239, 71, 111, 0.1)",
-            padding: "1rem",
-            borderRadius: "4px",
-            marginTop: "1rem",
-          }}
-        >
-          {error}
-        </p>
+        <p className="mt-4 rounded bg-[#ef476f]/10 p-4 text-[#ef476f]">{error}</p>
       )}
 
       {isUploading && (
-        <ul style={{ listStyle: "none", padding: 0, marginTop: "1.5rem" }}>
+        <ul className="mt-6 list-none p-0">
           {STAGES.map((stage) => {
             const reachedIndex = currentStage ? STAGES.indexOf(currentStage as (typeof STAGES)[number]) : -1;
             const done = reachedIndex >= STAGES.indexOf(stage);
             return (
               <li
                 key={stage}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.375rem 0",
-                  color: done ? "var(--fg)" : "var(--muted)",
-                }}
+                className={`flex items-center gap-3 py-1.5 ${done ? "text-fg" : "text-muted"}`}
               >
                 <span
                   aria-hidden
-                  style={{
-                    display: "inline-block",
-                    width: "1rem",
-                    height: "1rem",
-                    borderRadius: "3px",
-                    border: "1px solid var(--muted)",
-                    backgroundColor: done ? "var(--fg)" : "transparent",
-                    flexShrink: 0,
-                  }}
+                  className={`inline-block h-4 w-4 shrink-0 rounded-[3px] border border-muted ${
+                    done ? "bg-fg" : "bg-transparent"
+                  }`}
                 />
                 {stage.replace(/_/g, " ")}
                 {stage === "OCR_PROCESSING" && currentStage === "OCR_PROCESSING" && ocrProgress && (
-                  <span style={{ color: "var(--muted)", fontSize: "0.8125rem" }}>
+                  <span className="text-[0.8125rem] text-muted">
                     ({ocrProgress.completed}/{ocrProgress.total})
                   </span>
                 )}

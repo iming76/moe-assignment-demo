@@ -34,51 +34,20 @@ highlight:
   cleanup_size: 5
   min_area: 400
 
-strikethrough:
-  open_kernel: 25             # horizontal open: keeps long horizontal runs
-  min_stroke_len: 80          # px; longer than any word
-  max_stroke_thickness: 20    # px; joined multi-pass strikes stay thin
-  join_gap: 20                # px horizontal gap joined across fragments
-  join_height: 9              # px vertical gap joined (diagonal strokes)
-  min_aspect: 3               # width/height ratio for near-horizontal strokes
-  min_crossed_gap: 6          # stroke must cross inter-word space
-
-caret:
-  symbol_min: 5               # px; caret symbol component size window
-  symbol_max: 35
-  symbol_min_area: 20
-  symbol_max_area: 600
-  symbol_bottom_frac: 0.0     # symbols vary (top or bottom of band)
-  symbol_below_slack: 8       # px the symbol may dip below the band
-  insert_above: 60            # inserted text floats within this above the symbol
-  insert_min_above: 10        # inserted text starts at least this far above the symbol
-  insert_max_dx: 60           # horizontal window around the symbol
-  insert_max_width: 120       # inserted text is short (1-2 words)
-  insert_max_height: 70       # two-row insertions ("in\nlife") allowed
-
-ocr:
-  max_new_tokens: 128
-
 confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
   review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
 
-caret_anchor:
-  gap_epsilon_px: 8           # two candidate gaps within this distance = ambiguous
-
-llm_review:
-  enabled: false              # off by default (spec Section 39.1.6)
-  model: ""                   # vision-capable LLM; only matters when enabled
-  triggers:
-    caret_anchor:
-      gap_epsilon_px: 8
-    low_confidence:
-      threshold: 0.70
-      include_review_recommended: false
-  batch: true                 # group all flagged items of a page into one call
-  max_calls_per_page: 10
-  cache: true                 # key = hash(crop bytes + candidate list)
+vision_llm:
+  provider: openai
+  model: gpt-5.4-mini
+  endpoint: https://api.openai.com/v1/responses
+  api_key_env: OPENAI_API_KEY
+  request_schema_version: vision-ocr-v1
+  prompt_version: literal-v3
+  max_calls_per_page: 50
+  cache: true
 
 storage:
   root: storage
