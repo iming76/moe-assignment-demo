@@ -80,6 +80,17 @@ def detect_questions(
 
         group = [first]
         cursor = index + 1
+        while cursor < len(content):
+            nxt = content[cursor]
+            gap = nxt.bbox.y - (group[-1].bbox.y + group[-1].bbox.height)
+            nxt_text = text_for(nxt) if text_for else ""
+            starts_new_question = bool(QUESTION_PREFIX_RE.match(nxt_text)) if nxt_text else False
+            is_short = nxt.bbox.width < cfg.short_line_ratio * full_w
+            if gap <= cfg.group_max_gap and is_short and not starts_new_question:
+                group.append(nxt)
+                cursor += 1
+            else:
+                break
 
         q_counter += 1
         qid = f"q{q_counter:03d}"
