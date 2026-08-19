@@ -25,6 +25,29 @@ DEFAULT_WEIGHT_DENSITY = 0.20
 DEFAULT_PARAGRAPH_GAP_MULTIPLE = 1.6
 DEFAULT_PARAGRAPH_THRESHOLD = 0.5   # weighted score at which a boundary is emitted
 
+# Highlight detection (spec Section 17) — yellow HSV window.
+DEFAULT_HIGHLIGHT_HUE_MIN = 18
+DEFAULT_HIGHLIGHT_HUE_MAX = 40
+DEFAULT_HIGHLIGHT_SAT_MIN = 60
+DEFAULT_HIGHLIGHT_SAT_MAX = 255
+DEFAULT_HIGHLIGHT_VAL_MIN = 120
+DEFAULT_HIGHLIGHT_VAL_MAX = 255
+DEFAULT_HIGHLIGHT_CLEANUP_SIZE = 5
+DEFAULT_HIGHLIGHT_MIN_AREA = 400
+
+
+@dataclass(frozen=True)
+class HighlightConfig:
+    hue_min: int = DEFAULT_HIGHLIGHT_HUE_MIN
+    hue_max: int = DEFAULT_HIGHLIGHT_HUE_MAX
+    sat_min: int = DEFAULT_HIGHLIGHT_SAT_MIN
+    sat_max: int = DEFAULT_HIGHLIGHT_SAT_MAX
+    val_min: int = DEFAULT_HIGHLIGHT_VAL_MIN
+    val_max: int = DEFAULT_HIGHLIGHT_VAL_MAX
+    cleanup_size: int = DEFAULT_HIGHLIGHT_CLEANUP_SIZE
+    min_area: int = DEFAULT_HIGHLIGHT_MIN_AREA
+
+
 # Answer region detection (spec Section 10).
 DEFAULT_ANSWER_TRIM_DENSITY_RATIO = 0.25  # edge lines below this * median density are specks
 DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX = 60    # lines starting this far left of the margin
@@ -220,6 +243,7 @@ class Config:
     paragraph: ParagraphConfig = field(default_factory=ParagraphConfig)
     question: QuestionConfig = field(default_factory=QuestionConfig)
     answer: AnswerConfig = field(default_factory=AnswerConfig)
+    highlight: HighlightConfig = field(default_factory=HighlightConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
@@ -268,6 +292,19 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
+    )
+
+
+def _load_highlight(raw: dict[str, Any]) -> HighlightConfig:
+    return HighlightConfig(
+        hue_min=_int(raw, "hue_min", DEFAULT_HIGHLIGHT_HUE_MIN),
+        hue_max=_int(raw, "hue_max", DEFAULT_HIGHLIGHT_HUE_MAX),
+        sat_min=_int(raw, "sat_min", DEFAULT_HIGHLIGHT_SAT_MIN),
+        sat_max=_int(raw, "sat_max", DEFAULT_HIGHLIGHT_SAT_MAX),
+        val_min=_int(raw, "val_min", DEFAULT_HIGHLIGHT_VAL_MIN),
+        val_max=_int(raw, "val_max", DEFAULT_HIGHLIGHT_VAL_MAX),
+        cleanup_size=_int(raw, "cleanup_size", DEFAULT_HIGHLIGHT_CLEANUP_SIZE),
+        min_area=_int(raw, "min_area", DEFAULT_HIGHLIGHT_MIN_AREA),
     )
 
 
@@ -379,6 +416,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         paragraph=_load_paragraph(raw.get("paragraph", {}) or {}),
         question=_load_question(raw.get("question", {}) or {}),
         answer=_load_answer(raw.get("answer", {}) or {}),
+        highlight=_load_highlight(raw.get("highlight", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),

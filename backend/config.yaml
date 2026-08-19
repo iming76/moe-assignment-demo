@@ -24,6 +24,16 @@ answer:
   margin_scribble_px: 60      # lines starting this far left of the margin...
   min_ink_area: 800           # ...with less ink than this = margin scribble
 
+highlight:
+  hue_min: 18                 # yellow HSV window (OpenCV hue 0-179)
+  hue_max: 40
+  sat_min: 60
+  sat_max: 255
+  val_min: 120
+  val_max: 255
+  cleanup_size: 5
+  min_area: 400
+
 confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
