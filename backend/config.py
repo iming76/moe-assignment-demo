@@ -48,6 +48,15 @@ class HighlightConfig:
     min_area: int = DEFAULT_HIGHLIGHT_MIN_AREA
 
 
+# TrOCR (spec Sections 23-24).
+DEFAULT_OCR_MAX_NEW_TOKENS = 128
+
+
+@dataclass(frozen=True)
+class OCRConfig:
+    max_new_tokens: int = DEFAULT_OCR_MAX_NEW_TOKENS
+
+
 # Caret detection (spec Section 19).
 DEFAULT_CARET_SYMBOL_MIN = 5          # px; caret symbol component size window
 DEFAULT_CARET_SYMBOL_MAX = 35
@@ -296,6 +305,7 @@ class Config:
     highlight: HighlightConfig = field(default_factory=HighlightConfig)
     strikethrough: StrikethroughConfig = field(default_factory=StrikethroughConfig)
     caret: CaretConfig = field(default_factory=CaretConfig)
+    ocr: OCRConfig = field(default_factory=OCRConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
@@ -345,6 +355,10 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
     )
+
+
+def _load_ocr(raw: dict[str, Any]) -> OCRConfig:
+    return OCRConfig(max_new_tokens=_int(raw, "max_new_tokens", DEFAULT_OCR_MAX_NEW_TOKENS))
 
 
 def _load_caret(raw: dict[str, Any]) -> CaretConfig:
@@ -499,6 +513,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         highlight=_load_highlight(raw.get("highlight", {}) or {}),
         strikethrough=_load_strikethrough(raw.get("strikethrough", {}) or {}),
         caret=_load_caret(raw.get("caret", {}) or {}),
+        ocr=_load_ocr(raw.get("ocr", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),

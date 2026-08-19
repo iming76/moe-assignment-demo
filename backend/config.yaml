@@ -56,6 +56,9 @@ caret:
   insert_max_width: 120       # inserted text is short (1-2 words)
   insert_max_height: 70       # two-row insertions ("in\nlife") allowed
 
+ocr:
+  max_new_tokens: 128
+
 confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
