@@ -31,7 +31,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 ## 5. Crops & OCR
 
-- [ ] 12-Implement crop generator: persist question/answer/paragraph/line/word/cancelled/caret crops with full metadata (id, type, pageNumber, parentId, path, bbox, createdAt) before any OCR runs; crops immutable once written
+- [x] 12-Implement crop generator: persist question/answer/paragraph/line/word/cancelled/caret crops with full metadata (id, type, pageNumber, parentId, path, bbox, createdAt) before any OCR runs; crops immutable once written
 - [ ] 13-Implement TrOCR line-crop runner: literal text + confidence + model per line crop, no correction of any kind; beam search N-best candidates available for review stage
 
 ## 6. Reconstruction & Review
