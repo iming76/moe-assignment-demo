@@ -44,7 +44,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 ## 7. Backend Wiring
 
-- [ ] 17-Implement pipeline.py orchestrator: wire all stage modules in order, advance state machine per stage, verify all artifacts retained per storage layout
+- [x] 17-Implement pipeline.py orchestrator: wire all stage modules in order, advance state machine per stage, verify all artifacts retained per storage layout
 - [ ] 18-Implement FastAPI endpoints: upload document, get document state and full JSON, serve originals/rendered/crop images, submit review corrections, approve and export
 
 ## 8. Frontend
