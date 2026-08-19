@@ -1,5 +1,126 @@
-"""Optional, disabled-by-default LLM ambiguity review stage.
+"""Optional LLM ambiguity review — Trigger A: ambiguous caret anchor (task 16a).
 
-Stage module for the handwritten-script-ocr pipeline.
-Implemented in tasks.md — see openspec/changes/handwritten-script-ocr/.
+Spec Section 39.1.2: deterministic gap projection first; escalate only on
+ambiguity (two gaps within gap_epsilon_px, caret inside a word bbox,
+clustered/orphan carets, low anchor-line confidence, unclear line). The LLM
+is asked multiple choice over numbered tick-mark positions; invalid indices
+are rejected and the deterministic guess is kept.
+
+Full module grows in tasks 16b (low-confidence trigger) and 16c (plumbing).
 """
+
+from __future__ import annotations
+
+import time
+from typing import Callable, Optional
+
+import config as config_module
+from reconstruct import anchor_caret_deterministic
+from schemas import BoundingBox, Caret, LLMReview
+
+# A pluggable vision-LLM client: payload dict -> raw response dict (or None).
+LLMClient = Callable[[dict], Optional[dict]]
+
+
+def _no_client(payload: dict) -> Optional[dict]:
+    return None
+
+
+class LLMReviewStage:
+    def __init__(self, client: Optional[LLMClient] = None) -> None:
+        self.client = client or _no_client
+
+    # ------------------------------------------------------------------ 16a
+    def caret_anchor_reviews(
+        self,
+        page_number: int,
+        carets: list[Caret],
+        lines_by_id: dict[str, list[BoundingBox]],
+        line_confidence: dict[str, float],
+    ) -> list[LLMReview]:
+        cfg = config_module.CONFIG.llm_review
+        reviews: list[LLMReview] = []
+        seen_xs: list[float] = []
+        for caret in carets:
+            words = lines_by_id.get(caret.anchorLineId, [])
+            gap_idx, ambiguous, candidates = anchor_caret_deterministic(caret, words)
+            cx = caret.caret.get("bbox", {}).get("x")
+            reasons = []
+            if ambiguous:
+                reasons.append("two_gaps_within_epsilon")
+            if cx is not None and any(w.x < cx < w.x + w.width for w in words):
+                reasons.append("caret_inside_word")
+            if cx is not None and any(abs(cx - s) <= 10 for s in seen_xs):
+                reasons.append("clustered_carets")
+            if cx is not None:
+                seen_xs.append(cx)
+            if not words:
+                reasons.append("unclear_line")
+            conf = line_confidence.get(caret.anchorLineId)
+            if conf is not None and conf < cfg.triggers.low_confidence.threshold:
+                reasons.append("low_anchor_confidence")
+            if not reasons:
+                continue
+            review = self._ask(
+                page_number,
+                trigger="caret_anchor_ambiguity",
+                target_id=caret.id,
+                crop_paths=[caret.insertCrop] if caret.insertCrop else [],
+                candidates=[f"gap {i + 1}" for i in range(max(1, len(words) - 1))],
+                raw_payload={
+                    "question": "Which numbered tick mark is the caret anchor?",
+                    "reasons": reasons,
+                    "deterministic_guess": gap_idx,
+                    "candidates": list(range(len(words) - 1)),
+                },
+                valid=lambda resp: _valid_anchor(resp, len(words) - 1),
+                fallback=gap_idx,
+                agreed=lambda chosen: chosen == gap_idx,
+            )
+            if review is not None:
+                caret.llmReview = review
+                caret.anchorCandidates = candidates
+                reviews.append(review)
+        return reviews
+
+    def _ask(
+        self,
+        page_number: int,
+        trigger: str,
+        target_id: str,
+        crop_paths: list[str],
+        candidates: list[str],
+        raw_payload: dict,
+        valid: Callable[[dict], bool],
+        fallback,
+        agreed: Callable,
+    ) -> Optional[LLMReview]:
+        cfg = config_module.CONFIG.llm_review
+        if not cfg.enabled:
+            return None
+
+        started = time.perf_counter()
+        raw = self.client(raw_payload)
+        latency = int((time.perf_counter() - started) * 1000)
+
+        chosen = fallback
+        if raw is not None and valid(raw):
+            chosen = raw.get("chosen", raw.get("anchorIndex", raw.get("index", fallback)))
+
+        return LLMReview(
+            id=f"llm_{target_id}",
+            targetId=target_id,
+            trigger=trigger,
+            inputs={"cropPaths": crop_paths, "candidates": candidates},
+            rawResponse=raw,
+            chosen=chosen,
+            agreedWithDeterministic=bool(agreed(chosen)),
+            applied=False,  # until a human confirms
+            model=cfg.model,
+            latencyMs=latency,
+        )
+
+
+def _valid_anchor(resp: dict, n_gaps: int) -> bool:
+    idx = resp.get("anchorIndex", resp.get("chosen", resp.get("index")))
+    return isinstance(idx, int) and 0 <= idx < n_gaps
