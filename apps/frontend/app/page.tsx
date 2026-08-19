@@ -88,14 +88,16 @@ export default function Home() {
               ocrProgress={ocrProgress}
             />
           )}
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            className="mt-6 w-full"
-            disabled={isUploading || !selectedFile}
-          >
-            Submit
-          </Button>
+          {!isUploading && (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              className="mt-6 w-full"
+              disabled={isUploading || !selectedFile}
+            >
+              Submit
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
