@@ -26,7 +26,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 ## 4. Markup Detection
 
 - [x] 11a-Implement highlight detection: RGB→HSV color mask, morphological cleanup, contours → highlight bbox + polygon metadata; must not alter OCR text
-- [ ] 11b-Implement strikethrough detection: long diagonal/horizontal strokes crossing handwriting, orientation/length/overlap signals → cancelled region associated with text span
+- [x] 11b-Implement strikethrough detection: long diagonal/horizontal strokes crossing handwriting, orientation/length/overlap signals → cancelled region associated with text span
 - [ ] 11c-Implement caret detection: caret symbol bbox, inserted-text crop, anchor line ID
 
 ## 5. Crops & OCR

@@ -48,6 +48,27 @@ class HighlightConfig:
     min_area: int = DEFAULT_HIGHLIGHT_MIN_AREA
 
 
+# Strikethrough detection (spec Section 18).
+DEFAULT_STRIKE_OPEN_KERNEL = 25     # horizontal open: keeps long horizontal runs
+DEFAULT_STRIKE_MIN_STROKE_LEN = 80  # px; longer than any word
+DEFAULT_STRIKE_MAX_THICKNESS = 20   # px; joined multi-pass strikes stay thin
+DEFAULT_STRIKE_JOIN_GAP = 40        # px horizontal gap joined across fragments
+DEFAULT_STRIKE_JOIN_HEIGHT = 9      # px vertical gap joined (diagonal strokes)
+DEFAULT_STRIKE_MIN_ASPECT = 3       # width/height ratio for near-horizontal strokes
+DEFAULT_STRIKE_MIN_CROSSED_GAP = 6  # stroke must cross inter-word space
+
+
+@dataclass(frozen=True)
+class StrikethroughConfig:
+    open_kernel: int = DEFAULT_STRIKE_OPEN_KERNEL
+    min_stroke_len: int = DEFAULT_STRIKE_MIN_STROKE_LEN
+    max_stroke_thickness: int = DEFAULT_STRIKE_MAX_THICKNESS
+    join_gap: int = DEFAULT_STRIKE_JOIN_GAP
+    join_height: int = DEFAULT_STRIKE_JOIN_HEIGHT
+    min_aspect: int = DEFAULT_STRIKE_MIN_ASPECT
+    min_crossed_gap: int = DEFAULT_STRIKE_MIN_CROSSED_GAP
+
+
 # Answer region detection (spec Section 10).
 DEFAULT_ANSWER_TRIM_DENSITY_RATIO = 0.25  # edge lines below this * median density are specks
 DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX = 60    # lines starting this far left of the margin
@@ -244,6 +265,7 @@ class Config:
     question: QuestionConfig = field(default_factory=QuestionConfig)
     answer: AnswerConfig = field(default_factory=AnswerConfig)
     highlight: HighlightConfig = field(default_factory=HighlightConfig)
+    strikethrough: StrikethroughConfig = field(default_factory=StrikethroughConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
@@ -292,6 +314,18 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
+    )
+
+
+def _load_strikethrough(raw: dict[str, Any]) -> StrikethroughConfig:
+    return StrikethroughConfig(
+        open_kernel=_int(raw, "open_kernel", DEFAULT_STRIKE_OPEN_KERNEL),
+        min_stroke_len=_int(raw, "min_stroke_len", DEFAULT_STRIKE_MIN_STROKE_LEN),
+        max_stroke_thickness=_int(raw, "max_stroke_thickness", DEFAULT_STRIKE_MAX_THICKNESS),
+        join_gap=_int(raw, "join_gap", DEFAULT_STRIKE_JOIN_GAP),
+        join_height=_int(raw, "join_height", DEFAULT_STRIKE_JOIN_HEIGHT),
+        min_aspect=_int(raw, "min_aspect", DEFAULT_STRIKE_MIN_ASPECT),
+        min_crossed_gap=_int(raw, "min_crossed_gap", DEFAULT_STRIKE_MIN_CROSSED_GAP),
     )
 
 
@@ -417,6 +451,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         question=_load_question(raw.get("question", {}) or {}),
         answer=_load_answer(raw.get("answer", {}) or {}),
         highlight=_load_highlight(raw.get("highlight", {}) or {}),
+        strikethrough=_load_strikethrough(raw.get("strikethrough", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),

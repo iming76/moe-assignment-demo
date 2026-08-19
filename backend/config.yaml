@@ -34,6 +34,15 @@ highlight:
   cleanup_size: 5
   min_area: 400
 
+strikethrough:
+  open_kernel: 25             # horizontal open: keeps long horizontal runs
+  min_stroke_len: 80          # px; longer than any word
+  max_stroke_thickness: 20    # px; joined multi-pass strikes stay thin
+  join_gap: 40                # px horizontal gap joined across fragments
+  join_height: 9              # px vertical gap joined (diagonal strokes)
+  min_aspect: 3               # width/height ratio for near-horizontal strokes
+  min_crossed_gap: 6          # stroke must cross inter-word space
+
 confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
