@@ -41,6 +41,9 @@ DEFAULT_LLM_INCLUDE_REVIEW_RECOMMENDED = False
 
 DEFAULT_STORAGE_ROOT = "storage"
 
+# Document ingestion (spec Section 5.1).
+DEFAULT_RENDER_DPI = 150
+
 CONFIG_PATH = Path(__file__).resolve().parent / "config.yaml"
 
 
@@ -128,12 +131,18 @@ class StorageConfig:
 
 
 @dataclass(frozen=True)
+class IngestionConfig:
+    render_dpi: int = DEFAULT_RENDER_DPI
+
+
+@dataclass(frozen=True)
 class Config:
     paragraph: ParagraphConfig = field(default_factory=ParagraphConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
+    ingestion: IngestionConfig = field(default_factory=IngestionConfig)
 
 
 # ---------------------------------------------------------------------------
@@ -213,6 +222,10 @@ def _load_storage(raw: dict[str, Any]) -> StorageConfig:
     return StorageConfig(root=str(raw.get("root", DEFAULT_STORAGE_ROOT)))
 
 
+def _load_ingestion(raw: dict[str, Any]) -> IngestionConfig:
+    return IngestionConfig(render_dpi=_int(raw, "render_dpi", DEFAULT_RENDER_DPI))
+
+
 def load_config(path: Optional[Path] = None) -> Config:
     """Load config.yaml over the named defaults. Missing file or keys → defaults."""
     config_path = Path(path) if path is not None else CONFIG_PATH
@@ -232,6 +245,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),
         storage=_load_storage(raw.get("storage", {}) or {}),
+        ingestion=_load_ingestion(raw.get("ingestion", {}) or {}),
     )
 
 

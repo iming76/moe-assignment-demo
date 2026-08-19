@@ -35,3 +35,6 @@ llm_review:
 
 storage:
   root: storage
+
+ingestion:
+  render_dpi: 150             # DPI used when rendering PDF pages to images
