@@ -279,6 +279,7 @@ class Caret:
     caret: dict[str, Any] = field(default_factory=dict)  # {"bbox": {...}}
     insertCrop: str = ""
     anchorLineId: str = ""
+    insertBbox: Optional[BoundingBox] = None
     anchorCandidates: list[int] = field(default_factory=list)
     llmReview: Optional[LLMReview] = None
 
@@ -290,6 +291,8 @@ class Caret:
             "insertCrop": self.insertCrop,
             "anchorLineId": self.anchorLineId,
         }
+        if self.insertBbox is not None:
+            d["insertBbox"] = self.insertBbox.to_json()
         if self.anchorCandidates:
             d["anchorCandidates"] = list(self.anchorCandidates)
         if self.llmReview is not None:
@@ -304,6 +307,7 @@ class Caret:
             caret=dict(d.get("caret", {})),
             insertCrop=d.get("insertCrop", ""),
             anchorLineId=d.get("anchorLineId", ""),
+            insertBbox=BoundingBox.from_json(d["insertBbox"]) if d.get("insertBbox") else None,
             anchorCandidates=list(d.get("anchorCandidates", [])),
             llmReview=LLMReview.from_json(d["llmReview"]) if d.get("llmReview") else None,
         )

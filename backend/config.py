@@ -48,6 +48,33 @@ class HighlightConfig:
     min_area: int = DEFAULT_HIGHLIGHT_MIN_AREA
 
 
+# Caret detection (spec Section 19).
+DEFAULT_CARET_SYMBOL_MIN = 5          # px; caret symbol component size window
+DEFAULT_CARET_SYMBOL_MAX = 35
+DEFAULT_CARET_SYMBOL_MIN_AREA = 20
+DEFAULT_CARET_SYMBOL_MAX_AREA = 600
+DEFAULT_CARET_SYMBOL_BOTTOM_FRAC = 0.0   # symbols vary (top or bottom of band)
+DEFAULT_CARET_SYMBOL_BELOW_SLACK = 8     # px the symbol may dip below the band
+DEFAULT_CARET_INSERT_ABOVE = 60          # inserted text floats within this above the symbol
+DEFAULT_CARET_INSERT_MAX_DX = 60         # horizontal window around the symbol
+DEFAULT_CARET_INSERT_MAX_WIDTH = 120     # inserted text is short (1-2 words)
+DEFAULT_CARET_INSERT_MAX_HEIGHT = 70     # two-row insertions ("in\nlife") allowed
+
+
+@dataclass(frozen=True)
+class CaretConfig:
+    symbol_min: int = DEFAULT_CARET_SYMBOL_MIN
+    symbol_max: int = DEFAULT_CARET_SYMBOL_MAX
+    symbol_min_area: int = DEFAULT_CARET_SYMBOL_MIN_AREA
+    symbol_max_area: int = DEFAULT_CARET_SYMBOL_MAX_AREA
+    symbol_bottom_frac: float = DEFAULT_CARET_SYMBOL_BOTTOM_FRAC
+    symbol_below_slack: int = DEFAULT_CARET_SYMBOL_BELOW_SLACK
+    insert_above: int = DEFAULT_CARET_INSERT_ABOVE
+    insert_max_dx: int = DEFAULT_CARET_INSERT_MAX_DX
+    insert_max_width: int = DEFAULT_CARET_INSERT_MAX_WIDTH
+    insert_max_height: int = DEFAULT_CARET_INSERT_MAX_HEIGHT
+
+
 # Strikethrough detection (spec Section 18).
 DEFAULT_STRIKE_OPEN_KERNEL = 25     # horizontal open: keeps long horizontal runs
 DEFAULT_STRIKE_MIN_STROKE_LEN = 80  # px; longer than any word
@@ -73,7 +100,7 @@ class StrikethroughConfig:
 DEFAULT_ANSWER_TRIM_DENSITY_RATIO = 0.25  # edge lines below this * median density are specks
 DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX = 60    # lines starting this far left of the margin
 DEFAULT_ANSWER_MIN_INK_AREA = 800         # ...with less ink than this = margin scribble
-DEFAULT_HEADER_HEIGHT_FACTOR = 2.5   # lines taller than this * median = header block
+DEFAULT_HEADER_HEIGHT_FACTOR = 4.0   # lines taller than this * median = header block
 DEFAULT_QUESTION_GROUP_MAX_GAP = 45  # px between question lines that still group
 DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than this
 
@@ -266,6 +293,7 @@ class Config:
     answer: AnswerConfig = field(default_factory=AnswerConfig)
     highlight: HighlightConfig = field(default_factory=HighlightConfig)
     strikethrough: StrikethroughConfig = field(default_factory=StrikethroughConfig)
+    caret: CaretConfig = field(default_factory=CaretConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
@@ -314,6 +342,21 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
+    )
+
+
+def _load_caret(raw: dict[str, Any]) -> CaretConfig:
+    return CaretConfig(
+        symbol_min=_int(raw, "symbol_min", DEFAULT_CARET_SYMBOL_MIN),
+        symbol_max=_int(raw, "symbol_max", DEFAULT_CARET_SYMBOL_MAX),
+        symbol_min_area=_int(raw, "symbol_min_area", DEFAULT_CARET_SYMBOL_MIN_AREA),
+        symbol_max_area=_int(raw, "symbol_max_area", DEFAULT_CARET_SYMBOL_MAX_AREA),
+        symbol_bottom_frac=_num(raw, "symbol_bottom_frac", DEFAULT_CARET_SYMBOL_BOTTOM_FRAC),
+        symbol_below_slack=_int(raw, "symbol_below_slack", DEFAULT_CARET_SYMBOL_BELOW_SLACK),
+        insert_above=_int(raw, "insert_above", DEFAULT_CARET_INSERT_ABOVE),
+        insert_max_dx=_int(raw, "insert_max_dx", DEFAULT_CARET_INSERT_MAX_DX),
+        insert_max_width=_int(raw, "insert_max_width", DEFAULT_CARET_INSERT_MAX_WIDTH),
+        insert_max_height=_int(raw, "insert_max_height", DEFAULT_CARET_INSERT_MAX_HEIGHT),
     )
 
 
@@ -452,6 +495,7 @@ def load_config(path: Optional[Path] = None) -> Config:
         answer=_load_answer(raw.get("answer", {}) or {}),
         highlight=_load_highlight(raw.get("highlight", {}) or {}),
         strikethrough=_load_strikethrough(raw.get("strikethrough", {}) or {}),
+        caret=_load_caret(raw.get("caret", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),

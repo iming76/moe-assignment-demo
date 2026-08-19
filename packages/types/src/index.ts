@@ -109,6 +109,8 @@ export interface Caret {
   };
   insertCrop: string;
   anchorLineId: string;
+  /** Inserted-text region above the caret symbol (internal use). */
+  insertBbox?: BoundingBox;
   /** Candidate gap indices for ambiguous anchors (rendered as tick marks). */
   anchorCandidates?: number[];
   llmReview?: LLMReview;

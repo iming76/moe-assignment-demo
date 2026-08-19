@@ -15,7 +15,7 @@ paragraph:
   threshold: 0.5
 
 question:
-  header_height_factor: 2.5   # lines taller than this * median = header block
+  header_height_factor: 4.0   # lines taller than this * median = header block
   group_max_gap: 45           # px between question lines that still group
   short_line_ratio: 0.7       # continuation lines are shorter than this * full width
 
@@ -42,6 +42,18 @@ strikethrough:
   join_height: 9              # px vertical gap joined (diagonal strokes)
   min_aspect: 3               # width/height ratio for near-horizontal strokes
   min_crossed_gap: 6          # stroke must cross inter-word space
+
+caret:
+  symbol_min: 5               # px; caret symbol component size window
+  symbol_max: 35
+  symbol_min_area: 20
+  symbol_max_area: 600
+  symbol_bottom_frac: 0.0     # symbols vary (top or bottom of band)
+  symbol_below_slack: 8       # px the symbol may dip below the band
+  insert_above: 60            # inserted text floats within this above the symbol
+  insert_max_dx: 60           # horizontal window around the symbol
+  insert_max_width: 120       # inserted text is short (1-2 words)
+  insert_max_height: 70       # two-row insertions ("in\nlife") allowed
 
 confidence:
   # Low-confidence rules (spec Section 35)
