@@ -1,0 +1,37 @@
+# Pipeline configuration (task 3). All thresholds/weights/epsilons live here;
+# named defaults are in config.py and this file overrides them.
+
+paragraph:
+  # Paragraph boundary score weights (spec Section 12). Weights are normalized
+  # at load time if they don't sum to 1.
+  weights:
+    vertical_gap: 0.55
+    indentation: 0.25
+    density: 0.20
+  # A vertical gap at least this many multiples of median line height counts
+  # as a full-strength boundary signal.
+  gap_multiple: 1.6
+
+confidence:
+  # Low-confidence rules (spec Section 35)
+  accept_threshold: 0.90      # >= accepted
+  review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
+
+caret_anchor:
+  gap_epsilon_px: 8           # two candidate gaps within this distance = ambiguous
+
+llm_review:
+  enabled: false              # off by default (spec Section 39.1.6)
+  model: ""                   # vision-capable LLM; only matters when enabled
+  triggers:
+    caret_anchor:
+      gap_epsilon_px: 8
+    low_confidence:
+      threshold: 0.70
+      include_review_recommended: false
+  batch: true                 # group all flagged items of a page into one call
+  max_calls_per_page: 10
+  cache: true                 # key = hash(crop bytes + candidate list)
+
+storage:
+  root: storage
