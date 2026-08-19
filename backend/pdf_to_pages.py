@@ -84,7 +84,35 @@ def _ingest_image(source_path: Path, layout: StorageLayout) -> list[PageImage]:
 
 def _ingest_pdf(source_path: Path, layout: StorageLayout) -> list[PageImage]:
     """Task 5b: render every PDF page to an image at the configured DPI."""
-    raise NotImplementedError("PDF rendering lands in task 5b")
+    import pymupdf  # PyMuPDF
+
+    layout.rendered.mkdir(parents=True, exist_ok=True)
+    pages: list[PageImage] = []
+
+    with pymupdf.open(source_path) as doc:
+        if doc.is_encrypted:
+            raise ValueError(f"Encrypted PDFs are not supported: {source_path.name}")
+        zoom = CONFIG.ingestion.render_dpi / 72.0  # PDF native unit is 72 dpi
+        matrix = pymupdf.Matrix(zoom, zoom)
+        for index in range(len(doc)):
+            page_number = index + 1
+            layout.ensure_page(page_number)
+            pixmap = doc.load_page(index).get_pixmap(matrix=matrix, alpha=False)
+            rendered_path = layout.rendered_path(page_number)
+            pixmap.save(str(rendered_path))
+            pages.append(
+                PageImage(
+                    pageNumber=page_number,
+                    path=layout.rel(rendered_path),
+                    width=pixmap.width,
+                    height=pixmap.height,
+                    dpi=CONFIG.ingestion.render_dpi,
+                )
+            )
+
+    if not pages:
+        raise ValueError(f"PDF contains no pages: {source_path.name}")
+    return pages
 
 
 def ingest_document(source_path: Path, layout: StorageLayout) -> tuple[DocumentSource, list[PageImage]]:
