@@ -45,14 +45,14 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 ## 7. Backend Wiring
 
 - [x] 17-Implement pipeline.py orchestrator: wire all stage modules in order, advance state machine per stage, verify all artifacts retained per storage layout
-- [ ] 18-Implement FastAPI endpoints: upload document, get document state and full JSON, serve originals/rendered/crop images, submit review corrections, approve and export
+- [x] 18-Implement FastAPI endpoints: upload document, get document state and full JSON, serve originals/rendered/crop images, submit review corrections, approve and export
 
 ## 8. Frontend
 
-- [ ] 19a-Implement image viewer: zoom, pan, page navigation, original resolution
-- [ ] 19b-Implement toggleable SVG overlays (question, answer, paragraphs, lines, highlights, strikethrough, carets) drawn in original image coordinate system
-- [ ] 19c-Implement crop inspector: click an object → original location, corresponding crop, TrOCR result, final reconstructed text
-- [ ] 19d-Implement paragraph navigation tree (Question → Answer → Paragraph N) with bbox highlight, line crops, markup display, OCR confidence flagging, and manual correction editor
+- [x] 19a-Implement image viewer: zoom, pan, page navigation, original resolution
+- [x] 19b-Implement toggleable SVG overlays (question, answer, paragraphs, lines, highlights, strikethrough, carets) drawn in original image coordinate system
+- [x] 19c-Implement crop inspector: click an object → original location, corresponding crop, TrOCR result, final reconstructed text
+- [x] 19d-Implement paragraph navigation tree (Question → Answer → Paragraph N) with bbox highlight, line crops, markup display, OCR confidence flagging, and manual correction editor
 - [ ] 20-Wire frontend to backend API consuming packages/types as the single shared contract
 
 ## 9. Verification
