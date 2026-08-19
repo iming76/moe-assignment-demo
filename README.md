@@ -23,7 +23,7 @@ scores — is retained in storage.
 PDF / image upload
       │
       ▼
-backend/ (Python: OpenCV + OpenAI Vision LLM + FastAPI)
+apps/backend/ (Python: OpenCV + OpenAI Vision LLM + FastAPI)
   ingest → normalize → detect (questions/answers/paragraphs/highlights)
         → generate immutable line crops → OpenAI Vision line OCR
         → reconstruct JSON from lines
@@ -32,78 +32,70 @@ backend/ (Python: OpenCV + OpenAI Vision LLM + FastAPI)
 REST API (state machine: UPLOADED → … → REVIEW_REQUIRED → APPROVED → EXPORTED)
       │
       ▼
-apps/web (Next.js review frontend) ←→ packages/types (shared TS contract)
+apps/frontend (Next.js review frontend)
 ```
 
-### Backend (`backend/`)
+### Backend (`apps/backend/`)
 
-Stage-per-module Python pipeline; `pipeline.py` is a short orchestrator,
-shared structures live in `schemas.py` (mirrored by `packages/types`), and all
-thresholds/weights live in `config.py` + `config.yaml`. See
-[backend/README.md](backend/README.md) for the module map.
+Stage-per-module Python pipeline packaged under `app/`; `app/pipeline.py` is
+the short orchestrator, shared structures live in `app/schemas.py`, and all
+thresholds/weights live in `app/config.py` + `app/config.yaml`. See
+[apps/backend/README.md](apps/backend/README.md) for the module map.
 
 | Stage | Module |
 | --- | --- |
-| PDF → per-page rendered images | `pdf_to_pages.py` |
-| Image preprocessing (grayscale → morphology) | `normalize_image.py` |
-| Question detection + line grouping | `detect_questions.py` |
-| Answer region detection | `detect_answers.py` |
-| Paragraph boundary detection/splitting | `detect_paragraphs.py` |
-| Line/word segmentation helpers | `opencv_analysis.py` |
-| Highlight detection | `detect_highlights.py` |
-| Persist all crops + metadata before OCR | `crop_generator.py` |
-| OpenAI Vision over line crops (literal structured results) | `ocr/vision_llm.py` |
-| Line OCR → final JSON | `reconstruct.py` |
-| Review state machine / corrections / export | `state_machine.py`, `review.py` |
-| FastAPI endpoints | `api.py` |
-| Artifact storage layout | `storage.py` |
+| PDF → per-page rendered images | `app/ingest/pages.py` |
+| Image preprocessing (grayscale → morphology) | `app/imaging/normalize_image.py` |
+| Question detection + line grouping | `app/detect/questions.py` |
+| Answer region detection | `app/detect/answers.py` |
+| Paragraph boundary detection/splitting | `app/detect/paragraphs.py` |
+| Line/word segmentation helpers | `app/imaging/opencv_analysis.py` |
+| Highlight detection | `app/detect/highlights.py` |
+| Persist all crops + metadata before OCR | `app/imaging/crop_generator.py` |
+| OpenAI Vision over line crops (literal structured results) | `app/ocr/vision_llm.py` |
+| Line OCR → final JSON | `app/ocr/reconstruct.py` |
+| Review state machine / corrections / export | `app/state_machine.py`, `app/review.py` |
+| FastAPI endpoints | `app/api.py` |
+| Artifact storage layout | `app/storage.py` |
 
-### Frontend (`apps/web`)
+### Frontend (`apps/frontend`)
 
-Next.js 15 / React 19 review UI: zoom/pan page viewer with toggleable SVG
-overlays (questions, answers, paragraphs, lines, and highlights), a crop inspector for
-per-crop corrections, and the paragraph tree with applied corrections. Talks
-to the backend API through `apps/web/lib/api.ts` (base URL via
-`NEXT_PUBLIC_API_BASE`, default `http://localhost:8000`).
-
-### Shared types (`packages/types`)
-
-TypeScript contract mirroring the backend JSON schemas, consumed by the web
-app so frontend and backend stay in lockstep.
+Next.js 15 / React 19 review UI (`@moe-assignment-demo/web`): a document
+viewer/upload flow (`app/page.tsx`) and a review page (`app/review`) with
+per-crop corrections and approval. Talks to the backend API via the
+`NEXT_PUBLIC_API_BASE` env var (default `http://localhost:8000`).
 
 ## Repository layout
 
 ```
-backend/           Python pipeline + FastAPI (outside the turbo workspace by design)
-apps/web/          Next.js review frontend (@moe-assignment-demo/web)
-packages/types/    Shared TS contract (@moe-assignment-demo/types)
-openspec/          Spec-driven workflow: capability specs + archived change
-data/              Sample input documents
-storage/           Pipeline artifacts per document (gitignored)
-.resource/         Technical specification (specs.md, gitignored)
+apps/backend/      Python pipeline + FastAPI (@moe-assignment-demo/backend, uv-managed)
+apps/frontend/      Next.js review frontend (@moe-assignment-demo/web)
+openspec/           Spec-driven workflow: capability specs + archived change
+apps/backend/storage/  Pipeline artifacts per document (gitignored)
 ```
 
 ## Getting started
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.10+ and [uv](https://docs.astral.sh/uv/)
 - Node.js with pnpm (packageManager pinned to pnpm 11.12.0)
 
 ### Backend
 
 ```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn api:app --reload        # serves on http://localhost:8000
+cd apps/backend
+uv sync
+uv run uvicorn app.api:app --reload   # serves on http://localhost:8000
 ```
+
+Or via the root workspace: `pnpm --filter @moe-assignment-demo/backend dev`.
 
 ### Frontend + workspace
 
 ```bash
 pnpm install
-pnpm run dev                    # turbo dev: Next.js on http://localhost:3000
+pnpm run dev                    # runs dev in every workspace package (frontend + backend)
 ```
 
 Other root scripts: `pnpm run build`, `pnpm run lint`, `pnpm run check-types`,
@@ -111,10 +103,11 @@ Other root scripts: `pnpm run build`, `pnpm run lint`, `pnpm run check-types`,
 
 ### Try it
 
-Upload a sample script through the web UI, or hit the API directly:
+Upload a script (PDF or image) through the web UI (`http://localhost:3000`),
+or hit the API directly:
 
 ```bash
-curl -F "file=@data/ocr-assessment-sample.pdf" http://localhost:8000/documents
+curl -F "file=@/path/to/script.pdf" http://localhost:8000/documents
 ```
 
 The upload runs the full pipeline to `REVIEW_REQUIRED`, then the review UI is
@@ -125,9 +118,11 @@ used to inspect crops, submit corrections, and approve/export the final JSON.
 | Method & path | Purpose |
 | --- | --- |
 | `POST /documents` | Upload (multipart `file`) → runs pipeline, returns `documentId` |
+| `GET /documents/{id}/progress` | Poll pipeline progress while processing |
 | `GET /documents/{id}` | Document state + full structured JSON |
 | `GET /documents/{id}/artifacts/{path}` | Serve originals / rendered pages / crops / masks / OCR artifacts |
 | `POST /documents/{id}/corrections` | Submit a manual correction (`cropId`, `correctedText`, optional `reason`) |
+| `POST /documents/{id}/review-decisions` | Submit a review decision on an ambiguous item |
 | `POST /documents/{id}/approve` | Approve + export final JSON |
 
 State transitions are validated by the state machine:
@@ -140,21 +135,20 @@ MARKUP_RECONSTRUCTION → REVIEW_REQUIRED → APPROVED → EXPORTED
 
 ## Configuration
 
-All pipeline thresholds, weights, and epsilons live in `backend/config.yaml`
-(named defaults in `backend/config.py`): paragraph boundary scoring, question
-grouping, answer trimming, highlight HSV window, OCR decoding, confidence
-routing (≥ 0.90 accepted, 0.70–0.89 review recommended, < 0.70 review required),
-preprocessing, and segmentation. Storage root and ingestion DPI are also
-configured there.
+All pipeline thresholds, weights, and epsilons live in
+`apps/backend/app/config.yaml` (named defaults in `apps/backend/app/config.py`):
+paragraph boundary scoring, question grouping, answer trimming, highlight HSV
+window, OCR decoding, confidence routing (≥ 0.90 accepted, 0.70–0.89 review
+recommended, < 0.70 review required), preprocessing, and segmentation.
+Storage root and ingestion DPI are also configured there.
 
 Vision LLM transcription uses OpenAI (`provider: openai`,
 `model: gpt-5.4-mini`) through the Responses API. Copy
 `apps/backend/.env.example` to `apps/backend/.env` and set `OPENAI_API_KEY`.
 A repository-root `.env` is also supported; the backend loads either location
-automatically. Configure schema/prompt versions, per-page cap, and caching in
-`apps/backend/app/config.yaml`. Reprocessing
-must reuse the already persisted immutable crop paths; crop writes intentionally
-refuse overwrites. Prior crops and OCR provenance remain available for review.
+automatically. Reprocessing must reuse the already persisted immutable crop
+paths; crop writes intentionally refuse overwrites. Prior crops and OCR
+provenance remain available for review.
 
 Provider evaluation metrics (cost, latency, uncertainty rate, and reviewer
 acceptance) must be recorded after an operator selects a provider/model and

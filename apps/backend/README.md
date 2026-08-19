@@ -4,9 +4,8 @@ Python pipeline for the handwritten student script OCR POC.
 
 Stage-per-module layout (design.md decision 3), packaged under `app/` and
 grouped into subpackages by pipeline phase. `app/pipeline.py` is the short
-orchestrator; shared structures live in `app/schemas.py` (mirrored by
-`packages/types`); thresholds/weights live in `app/config.py` +
-`app/config.yaml`.
+orchestrator; shared structures live in `app/schemas.py`; thresholds/weights
+live in `app/config.py` + `app/config.yaml`.
 
     app/
       api.py                FastAPI endpoints (`uv run uvicorn app.api:app`)
@@ -29,10 +28,13 @@ orchestrator; shared structures live in `app/schemas.py` (mirrored by
         highlights.py          highlight detection
       ocr/
         vision_llm.py          OpenAI Vision over line crops
-        prompts/               versioned Vision LLM prompt text
+        prompts/               Vision LLM prompt text (e.g. line_transcription.md)
         reconstruct.py         line OCR → final JSON
 
-`storage/` (runtime document data) stays at the package root, alongside
-`pyproject.toml`/`uv.lock`, since it's generated output rather than source.
+`storage/` (runtime document data, gitignored) stays at the package root,
+alongside `pyproject.toml`/`uv.lock`, since it's generated output rather than
+source.
 
-This directory lives outside the turbo workspace by design.
+Run with `uv sync` then `uv run uvicorn app.api:app --reload`, or via the
+root workspace: `pnpm --filter @moe-assignment-demo/backend dev`. Tests:
+`uv run python -m unittest discover -s tests -v`.
