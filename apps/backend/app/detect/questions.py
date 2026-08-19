@@ -25,16 +25,43 @@ def _full_width(lines: list[LineRegion]) -> float:
     return float(widths[len(widths) // 2])
 
 
+def _on_ruled_paper(
+    line: LineRegion, rule_bands: list[tuple[int, int]], median_h: float
+) -> bool:
+    """True when a ruled-paper band sits just below this line.
+
+    Printed question text is not written on ruled lines; the handwritten
+    answer is. This distinguishes a full-width printed question line (which
+    should stay part of the question) from the start of the answer, without
+    needing OCR text.
+    """
+    if not rule_bands:
+        return False
+    center_y = line.bbox.y + line.bbox.height / 2
+    lower = min((start for start, _ in rule_bands if start > center_y), default=None)
+    if lower is None:
+        return False
+    gap = lower - (line.bbox.y + line.bbox.height)
+    return gap <= CONFIG.question.ruled_gap_factor * median_h
+
+
 def detect_questions(
     lines: list[LineRegion],
     page_number: int,
     text_for: Optional[Callable[[LineRegion], str]] = None,
+    rule_bands: list[tuple[int, int]] | None = None,
 ) -> list[Question]:
     """Detect question line groups on one page.
 
     text_for, when provided, supplies OCR text so prefix/question-mark
     signals can confirm the spatial guess; without it, position + spacing
     alone decide (question detection runs before detailed OCR).
+
+    rule_bands, when provided (from opencv_analysis.ruled_line_bands), lets
+    grouping tell printed question text from the start of the handwritten
+    answer by whether a line sits on ruled paper, instead of relying on line
+    width — a full-width printed question paragraph is otherwise mistaken
+    for the end of the question after just its first (short) line.
     """
     cfg = CONFIG.question
     median_h = median_line_height(lines)
@@ -72,8 +99,11 @@ def detect_questions(
             gap = nxt.bbox.y - (group[-1].bbox.y + group[-1].bbox.height)
             nxt_text = text_for(nxt) if text_for else ""
             starts_new_question = bool(QUESTION_PREFIX_RE.match(nxt_text)) if nxt_text else False
-            is_short = nxt.bbox.width < cfg.short_line_ratio * full_w
-            if gap <= cfg.group_max_gap and is_short and not starts_new_question:
+            if rule_bands:
+                can_continue = not _on_ruled_paper(nxt, rule_bands, median_h)
+            else:
+                can_continue = nxt.bbox.width < cfg.short_line_ratio * full_w
+            if gap <= cfg.group_max_gap and can_continue and not starts_new_question:
                 group.append(nxt)
                 cursor += 1
             else:

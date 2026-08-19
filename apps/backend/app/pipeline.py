@@ -82,7 +82,8 @@ def process_document(
 
         # NORMALIZED → QUESTION_DETECTED
         lines = segment_lines(ink)
-        questions = detect_questions(lines, page_meta.pageNumber)
+        rule_bands = ruled_line_bands(ink)
+        questions = detect_questions(lines, page_meta.pageNumber, rule_bands=rule_bands)
         if document.state == "NORMALIZED":
             document.state = advance(document.state, "QUESTION_DETECTED")
         page.question = questions[0] if questions else None
@@ -105,7 +106,7 @@ def process_document(
             document.state = advance(document.state, "PARAGRAPHS_DETECTED")
 
         # → CROPS_GENERATED (all crops persisted BEFORE any OCR)
-        generate_crops(page, rendered, ink, lines, layout, ruled_line_bands(ink))
+        generate_crops(page, rendered, ink, lines, layout, rule_bands)
         if document.state == "PARAGRAPHS_DETECTED":
             document.state = advance(document.state, "CROPS_GENERATED")
 

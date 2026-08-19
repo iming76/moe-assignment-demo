@@ -55,6 +55,7 @@ DEFAULT_ANSWER_MIN_INK_AREA = 800         # ...with less ink than this = margin 
 DEFAULT_HEADER_HEIGHT_FACTOR = 4.0   # lines taller than this * median = header block
 DEFAULT_QUESTION_GROUP_MAX_GAP = 45  # px between question lines that still group
 DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than this
+DEFAULT_QUESTION_RULED_GAP_FACTOR = 1.5  # line-to-ruled-band gap (x median line height) that still counts as "on ruled paper"
 
 # Low-confidence rules (spec Section 35).
 DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD = 0.90
@@ -137,6 +138,7 @@ class QuestionConfig:
     header_height_factor: float = DEFAULT_HEADER_HEIGHT_FACTOR
     group_max_gap: int = DEFAULT_QUESTION_GROUP_MAX_GAP
     short_line_ratio: float = DEFAULT_QUESTION_SHORT_LINE_RATIO
+    ruled_gap_factor: float = DEFAULT_QUESTION_RULED_GAP_FACTOR
 
 
 @dataclass(frozen=True)
@@ -264,6 +266,7 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
+        ruled_gap_factor=_num(raw, "ruled_gap_factor", DEFAULT_QUESTION_RULED_GAP_FACTOR),
     )
 
 
