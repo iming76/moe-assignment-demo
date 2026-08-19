@@ -11,6 +11,13 @@ paragraph:
   # A vertical gap at least this many multiples of median line height counts
   # as a full-strength boundary signal.
   gap_multiple: 1.6
+  # Weighted boundary score (0..1) at which a paragraph break is emitted.
+  threshold: 0.5
+
+question:
+  header_height_factor: 2.5   # lines taller than this * median = header block
+  group_max_gap: 45           # px between question lines that still group
+  short_line_ratio: 0.7       # continuation lines are shorter than this * full width
 
 confidence:
   # Low-confidence rules (spec Section 35)
@@ -48,3 +55,18 @@ preprocess:
   adaptive_c: 15
   morph_close_size: 3
   morph_open_size: 2
+
+segment:
+  rule_kernel_width: 60       # horizontal open kernel; rules are the only long runs
+  margin_kernel_height: 60    # vertical open kernel; margin lines are long verticals
+  rule_max_thickness: 6
+  line_gap_tolerance: 4
+  min_row_ink: 12             # rows below this are valleys/gaps, not ink
+  min_line_ink_area: 150
+  word_gap_tolerance: 3
+  min_col_ink: 3              # cols below this are inter-word valleys
+  min_word_width: 4
+  page_crop_left: 10          # px zeroed at page edges (vertical margin lines)
+  page_crop_right: 15
+  page_crop_top: 0
+  page_crop_bottom: 0

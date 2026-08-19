@@ -23,6 +23,12 @@ DEFAULT_WEIGHT_VERTICAL_GAP = 0.55
 DEFAULT_WEIGHT_INDENTATION = 0.25
 DEFAULT_WEIGHT_DENSITY = 0.20
 DEFAULT_PARAGRAPH_GAP_MULTIPLE = 1.6
+DEFAULT_PARAGRAPH_THRESHOLD = 0.5   # weighted score at which a boundary is emitted
+
+# Question detection (spec Sections 7-8).
+DEFAULT_HEADER_HEIGHT_FACTOR = 2.5   # lines taller than this * median = header block
+DEFAULT_QUESTION_GROUP_MAX_GAP = 45  # px between question lines that still group
+DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than this
 
 # Low-confidence rules (spec Section 35).
 DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD = 0.90
@@ -54,6 +60,22 @@ DEFAULT_ADAPTIVE_C = 15
 DEFAULT_MORPH_CLOSE_SIZE = 3
 DEFAULT_MORPH_OPEN_SIZE = 2
 
+# Line/word segmentation (spec Sections 15, 11).
+DEFAULT_RULE_KERNEL_WIDTH = 60  # horizontal open kernel; rules are the only long runs
+DEFAULT_MARGIN_KERNEL_HEIGHT = 60  # vertical open kernel; margin lines are long verticals
+DEFAULT_RULE_ROW_WIDTH_RATIO = 0.6   # (legacy, unused by morph removal)
+DEFAULT_RULE_MAX_THICKNESS = 6       # px; rules thicker than this are kept as ink
+DEFAULT_LINE_GAP_TOLERANCE = 4       # blank rows allowed inside one line
+DEFAULT_MIN_ROW_INK = 12             # rows below this are valleys/gaps, not ink
+DEFAULT_MIN_LINE_INK_AREA = 150
+DEFAULT_WORD_GAP_TOLERANCE = 3       # blank cols allowed inside one word
+DEFAULT_MIN_COL_INK = 3              # cols below this are inter-word valleys
+DEFAULT_MIN_WORD_WIDTH = 4
+DEFAULT_PAGE_CROP_LEFT = 10          # px zeroed at page edges (margin lines)
+DEFAULT_PAGE_CROP_RIGHT = 15
+DEFAULT_PAGE_CROP_TOP = 0
+DEFAULT_PAGE_CROP_BOTTOM = 0
+
 CONFIG_PATH = Path(__file__).resolve().parent / "config.yaml"
 
 
@@ -83,6 +105,14 @@ class ParagraphWeights:
 class ParagraphConfig:
     weights: ParagraphWeights = field(default_factory=ParagraphWeights)
     gap_multiple: float = DEFAULT_PARAGRAPH_GAP_MULTIPLE
+    threshold: float = DEFAULT_PARAGRAPH_THRESHOLD
+
+
+@dataclass(frozen=True)
+class QuestionConfig:
+    header_height_factor: float = DEFAULT_HEADER_HEIGHT_FACTOR
+    group_max_gap: int = DEFAULT_QUESTION_GROUP_MAX_GAP
+    short_line_ratio: float = DEFAULT_QUESTION_SHORT_LINE_RATIO
 
 
 @dataclass(frozen=True)
@@ -158,14 +188,34 @@ class PreprocessConfig:
 
 
 @dataclass(frozen=True)
+class SegmentConfig:
+    rule_kernel_width: int = DEFAULT_RULE_KERNEL_WIDTH
+    margin_kernel_height: int = DEFAULT_MARGIN_KERNEL_HEIGHT
+    rule_row_width_ratio: float = DEFAULT_RULE_ROW_WIDTH_RATIO
+    rule_max_thickness: int = DEFAULT_RULE_MAX_THICKNESS
+    line_gap_tolerance: int = DEFAULT_LINE_GAP_TOLERANCE
+    min_row_ink: int = DEFAULT_MIN_ROW_INK
+    min_line_ink_area: int = DEFAULT_MIN_LINE_INK_AREA
+    word_gap_tolerance: int = DEFAULT_WORD_GAP_TOLERANCE
+    min_col_ink: int = DEFAULT_MIN_COL_INK
+    min_word_width: int = DEFAULT_MIN_WORD_WIDTH
+    page_crop_left: int = DEFAULT_PAGE_CROP_LEFT
+    page_crop_right: int = DEFAULT_PAGE_CROP_RIGHT
+    page_crop_top: int = DEFAULT_PAGE_CROP_TOP
+    page_crop_bottom: int = DEFAULT_PAGE_CROP_BOTTOM
+
+
+@dataclass(frozen=True)
 class Config:
     paragraph: ParagraphConfig = field(default_factory=ParagraphConfig)
+    question: QuestionConfig = field(default_factory=QuestionConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
     preprocess: PreprocessConfig = field(default_factory=PreprocessConfig)
+    segment: SegmentConfig = field(default_factory=SegmentConfig)
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +248,15 @@ def _load_paragraph(raw: dict[str, Any]) -> ParagraphConfig:
     return ParagraphConfig(
         weights=weights,
         gap_multiple=_num(raw, "gap_multiple", DEFAULT_PARAGRAPH_GAP_MULTIPLE),
+        threshold=_num(raw, "threshold", DEFAULT_PARAGRAPH_THRESHOLD),
+    )
+
+
+def _load_question(raw: dict[str, Any]) -> QuestionConfig:
+    return QuestionConfig(
+        header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
+        group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
+        short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
     )
 
 
@@ -265,6 +324,25 @@ def _load_preprocess(raw: dict[str, Any]) -> PreprocessConfig:
     )
 
 
+def _load_segment(raw: dict[str, Any]) -> SegmentConfig:
+    return SegmentConfig(
+        rule_kernel_width=_int(raw, "rule_kernel_width", DEFAULT_RULE_KERNEL_WIDTH),
+        margin_kernel_height=_int(raw, "margin_kernel_height", DEFAULT_MARGIN_KERNEL_HEIGHT),
+        rule_row_width_ratio=_num(raw, "rule_row_width_ratio", DEFAULT_RULE_ROW_WIDTH_RATIO),
+        rule_max_thickness=_int(raw, "rule_max_thickness", DEFAULT_RULE_MAX_THICKNESS),
+        line_gap_tolerance=_int(raw, "line_gap_tolerance", DEFAULT_LINE_GAP_TOLERANCE),
+        min_row_ink=_int(raw, "min_row_ink", DEFAULT_MIN_ROW_INK),
+        min_line_ink_area=_int(raw, "min_line_ink_area", DEFAULT_MIN_LINE_INK_AREA),
+        word_gap_tolerance=_int(raw, "word_gap_tolerance", DEFAULT_WORD_GAP_TOLERANCE),
+        min_col_ink=_int(raw, "min_col_ink", DEFAULT_MIN_COL_INK),
+        min_word_width=_int(raw, "min_word_width", DEFAULT_MIN_WORD_WIDTH),
+        page_crop_left=_int(raw, "page_crop_left", DEFAULT_PAGE_CROP_LEFT),
+        page_crop_right=_int(raw, "page_crop_right", DEFAULT_PAGE_CROP_RIGHT),
+        page_crop_top=_int(raw, "page_crop_top", DEFAULT_PAGE_CROP_TOP),
+        page_crop_bottom=_int(raw, "page_crop_bottom", DEFAULT_PAGE_CROP_BOTTOM),
+    )
+
+
 def load_config(path: Optional[Path] = None) -> Config:
     """Load config.yaml over the named defaults. Missing file or keys → defaults."""
     config_path = Path(path) if path is not None else CONFIG_PATH
@@ -280,12 +358,14 @@ def load_config(path: Optional[Path] = None) -> Config:
 
     return Config(
         paragraph=_load_paragraph(raw.get("paragraph", {}) or {}),
+        question=_load_question(raw.get("question", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),
         storage=_load_storage(raw.get("storage", {}) or {}),
         ingestion=_load_ingestion(raw.get("ingestion", {}) or {}),
         preprocess=_load_preprocess(raw.get("preprocess", {}) or {}),
+        segment=_load_segment(raw.get("segment", {}) or {}),
     )
 
 
