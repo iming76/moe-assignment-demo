@@ -11,12 +11,13 @@ Full module grows in tasks 16b (low-confidence trigger) and 16c (plumbing).
 
 from __future__ import annotations
 
+import hashlib
 import time
 from typing import Callable, Optional
 
 import config as config_module
 from reconstruct import anchor_caret_deterministic
-from schemas import BoundingBox, Caret, LLMReview, OCRResult
+from schemas import BoundingBox, Caret, Document, LLMReview, OCRResult
 
 # A pluggable vision-LLM client: payload dict -> raw response dict (or None).
 LLMClient = Callable[[dict], Optional[dict]]
@@ -29,6 +30,8 @@ def _no_client(payload: dict) -> Optional[dict]:
 class LLMReviewStage:
     def __init__(self, client: Optional[LLMClient] = None) -> None:
         self.client = client or _no_client
+        self._cache: dict[str, LLMReview] = {}
+        self._calls_per_page: dict[int, int] = {}
 
     # ------------------------------------------------------------------ 16a
     def caret_anchor_reviews(
@@ -138,16 +141,25 @@ class LLMReviewStage:
         cfg = config_module.CONFIG.llm_review
         if not cfg.enabled:
             return None
+        if self._calls_per_page.get(page_number, 0) >= cfg.max_calls_per_page:
+            return None  # per-page call cap
+
+        cache_key = hashlib.sha256(
+            (target_id + "|".join(crop_paths) + "|".join(candidates)).encode()
+        ).hexdigest()
+        if cfg.cache and cache_key in self._cache:
+            return self._cache[cache_key]
 
         started = time.perf_counter()
         raw = self.client(raw_payload)
         latency = int((time.perf_counter() - started) * 1000)
+        self._calls_per_page[page_number] = self._calls_per_page.get(page_number, 0) + 1
 
         chosen = fallback
         if raw is not None and valid(raw):
             chosen = raw.get("chosen", raw.get("anchorIndex", raw.get("index", fallback)))
 
-        return LLMReview(
+        review = LLMReview(
             id=f"llm_{target_id}",
             targetId=target_id,
             trigger=trigger,
@@ -159,6 +171,44 @@ class LLMReviewStage:
             model=cfg.model,
             latencyMs=latency,
         )
+        if cfg.cache:
+            self._cache[cache_key] = review
+        return review
+
+
+def run_llm_review(
+    document: Document,
+    client: Optional[LLMClient] = None,
+    words_by_line_id: Optional[dict[str, list[BoundingBox]]] = None,
+) -> list[LLMReview]:
+    """Spec 39.1.7: after reconstruction, before human review.
+
+    enabled=false yields zero behavior change (no client calls, no records).
+    The full page image is never sent — only target crops and spatial
+    metadata (see _ask payloads).
+    """
+    if not config_module.CONFIG.llm_review.enabled:
+        return []
+    stage = LLMReviewStage(client)
+    provided = words_by_line_id or {}
+    all_reviews: list[LLMReview] = []
+    for page in document.pages:
+        lines_by_id: dict[str, list[BoundingBox]] = {}
+        line_conf: dict[str, float] = {}
+        ocr_by_crop = {o.cropId: o for o in page.ocr}
+        if page.answer:
+            for para in page.answer.paragraphs:
+                for line in para.lines:
+                    lines_by_id[line.id] = provided.get(line.id, [])
+                    res = ocr_by_crop.get(line.cropId)
+                    if res:
+                        line_conf[line.id] = res.confidence
+        all_reviews += stage.caret_anchor_reviews(
+            page.pageNumber, page.carets, lines_by_id, line_conf
+        )
+        all_reviews += stage.low_confidence_reviews(page.pageNumber, page.ocr)
+    document.llmReviews += all_reviews
+    return all_reviews
 
 
 def _valid_anchor(resp: dict, n_gaps: int) -> bool:

@@ -40,7 +40,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 - [x] 15-Implement human review flow: Review Required state after reconstruction, configurable confidence flagging (>=0.90 accepted / 0.70–0.89 recommended / <0.70 required), manual corrections recorded, approval → APPROVED → export final JSON
 - [x] 16a-Implement LLM caret-anchor trigger: deterministic gap projection first; escalate only on ambiguity (two gaps within epsilon, caret inside word bbox, clustered/orphan carets, low anchor confidence, unclear line); multiple-choice request over numbered tick-mark crop; reject invalid anchorIndex and keep deterministic guess
 - [x] 16b-Implement LLM low-confidence trigger: <0.70 sent (0.70–0.89 only if include_review_recommended, >=0.90 never); select among TrOCR N-best candidates by index; free-form fallback diff-validated against top-1 and rejected if normalized
-- [ ] 16c-Implement LLM review plumbing: LLMReview records (trigger, inputs, rawResponse, chosen, agreedWithDeterministic, applied, model, latencyMs), applied=false until human confirms, per-page call cap + caching, enabled=false yields zero behavior change; full page image never sent
+- [x] 16c-Implement LLM review plumbing: LLMReview records (trigger, inputs, rawResponse, chosen, agreedWithDeterministic, applied, model, latencyMs), applied=false until human confirms, per-page call cap + caching, enabled=false yields zero behavior change; full page image never sent
 
 ## 7. Backend Wiring
 
