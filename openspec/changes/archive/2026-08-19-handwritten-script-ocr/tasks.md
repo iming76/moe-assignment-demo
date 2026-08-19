@@ -57,4 +57,4 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 ## 9. Verification
 
-- [ ] 21-End-to-end verification on data/ocr-assessment-sample.png: run the full pipeline, walk the Section 42 acceptance criteria checklist (input, question, answer, OCR, markup, formatting, frontend, LLM-review-disabled default), fix gaps
+- [x] 21-End-to-end verification on data/ocr-assessment-sample.png: run the full pipeline, walk the Section 42 acceptance criteria checklist (input, question, answer, OCR, markup, formatting, frontend, LLM-review-disabled default), fix gaps

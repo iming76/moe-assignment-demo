@@ -106,14 +106,31 @@ def process_document(source_path: Path, document_id: str, root: str | None = Non
         generate_crops(page, rendered, ink, lines, layout)
         document.state = transition(document.state, "CROPS_GENERATED")
 
-        # → OCR_PROCESSING
+        # → OCR_PROCESSING (line crops drive transcription; caret crops give
+        # the inserted text for reconstruction)
         for crop in page.crops:
-            if crop.type == "line":
+            if crop.type in ("line", "caret"):
                 result = run_line_crop(layout.doc_root / crop.path)
                 result.cropId = crop.id
                 persist_ocr(layout, page_meta.pageNumber, result)
                 page.ocr.append(result)
         document.state = transition(document.state, "OCR_PROCESSING")
+
+        # remap caret anchors from raw segmentation ids to paragraph line ids
+        if answer is not None:
+            answer_lines = answer_line_regions(lines, answer)
+            for caret in page.carets:
+                y = caret.caret.get("bbox", {}).get("y")
+                if y is None:
+                    continue
+                for para in answer.paragraphs:
+                    para_lines = [
+                        lr for lr in answer_lines
+                        if para.bbox.y <= lr.bbox.y <= para.bbox.y + para.bbox.height
+                    ]
+                    for idx, lr in enumerate(para_lines, 1):
+                        if lr.bbox.y <= y <= lr.bbox.y + lr.bbox.height + 8:
+                            caret.anchorLineId = f"{para.id}_line{idx:03d}"
 
         # question text from its line crops (literal, uncorrected)
         if page.question is not None:

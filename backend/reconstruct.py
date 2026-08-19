@@ -120,7 +120,12 @@ def reconstruct_paragraph(
         raw = result.text if result else line.text
         words = segment_words(ink, line.bbox) if ink is not None else []
 
-        strikes = [m for m in paragraph.markups if isinstance(m, Strikethrough) and m.lineId == line.id]
+        strikes = [
+            m
+            for m in paragraph.markups
+            if isinstance(m, Strikethrough)
+            and (m.lineId == line.id or _intersects(m.bbox, line.bbox))
+        ]
         inserts: list[tuple[int, str]] = []
         for caret in carets:
             if caret.anchorLineId != line.id:
@@ -133,6 +138,17 @@ def reconstruct_paragraph(
         line_texts.append(reconstruct_line(raw, words, strikes, inserts))
 
     return " ".join(t for t in line_texts if t.strip())
+
+
+def _intersects(a: BoundingBox | None, b: BoundingBox) -> bool:
+    if a is None:
+        return False
+    return not (
+        a.x + a.width < b.x
+        or b.x + b.width < a.x
+        or a.y + a.height < b.y
+        or b.y + b.height < a.y
+    )
 
 
 def reconstruct_document(document: Document, ink_by_page: dict | None = None) -> Document:
