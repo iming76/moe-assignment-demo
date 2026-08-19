@@ -25,7 +25,10 @@ DEFAULT_WEIGHT_DENSITY = 0.20
 DEFAULT_PARAGRAPH_GAP_MULTIPLE = 1.6
 DEFAULT_PARAGRAPH_THRESHOLD = 0.5   # weighted score at which a boundary is emitted
 
-# Question detection (spec Sections 7-8).
+# Answer region detection (spec Section 10).
+DEFAULT_ANSWER_TRIM_DENSITY_RATIO = 0.25  # edge lines below this * median density are specks
+DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX = 60    # lines starting this far left of the margin
+DEFAULT_ANSWER_MIN_INK_AREA = 800         # ...with less ink than this = margin scribble
 DEFAULT_HEADER_HEIGHT_FACTOR = 2.5   # lines taller than this * median = header block
 DEFAULT_QUESTION_GROUP_MAX_GAP = 45  # px between question lines that still group
 DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than this
@@ -113,6 +116,13 @@ class QuestionConfig:
     header_height_factor: float = DEFAULT_HEADER_HEIGHT_FACTOR
     group_max_gap: int = DEFAULT_QUESTION_GROUP_MAX_GAP
     short_line_ratio: float = DEFAULT_QUESTION_SHORT_LINE_RATIO
+
+
+@dataclass(frozen=True)
+class AnswerConfig:
+    trim_density_ratio: float = DEFAULT_ANSWER_TRIM_DENSITY_RATIO
+    margin_scribble_px: int = DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX
+    min_ink_area: int = DEFAULT_ANSWER_MIN_INK_AREA
 
 
 @dataclass(frozen=True)
@@ -209,6 +219,7 @@ class SegmentConfig:
 class Config:
     paragraph: ParagraphConfig = field(default_factory=ParagraphConfig)
     question: QuestionConfig = field(default_factory=QuestionConfig)
+    answer: AnswerConfig = field(default_factory=AnswerConfig)
     confidence: ConfidenceConfig = field(default_factory=ConfidenceConfig)
     caret_anchor: CaretAnchorConfig = field(default_factory=CaretAnchorConfig)
     llm_review: LLMReviewConfig = field(default_factory=LLMReviewConfig)
@@ -257,6 +268,14 @@ def _load_question(raw: dict[str, Any]) -> QuestionConfig:
         header_height_factor=_num(raw, "header_height_factor", DEFAULT_HEADER_HEIGHT_FACTOR),
         group_max_gap=_int(raw, "group_max_gap", DEFAULT_QUESTION_GROUP_MAX_GAP),
         short_line_ratio=_num(raw, "short_line_ratio", DEFAULT_QUESTION_SHORT_LINE_RATIO),
+    )
+
+
+def _load_answer(raw: dict[str, Any]) -> AnswerConfig:
+    return AnswerConfig(
+        trim_density_ratio=_num(raw, "trim_density_ratio", DEFAULT_ANSWER_TRIM_DENSITY_RATIO),
+        margin_scribble_px=_int(raw, "margin_scribble_px", DEFAULT_ANSWER_MARGIN_SCRIBBLE_PX),
+        min_ink_area=_int(raw, "min_ink_area", DEFAULT_ANSWER_MIN_INK_AREA),
     )
 
 
@@ -359,6 +378,7 @@ def load_config(path: Optional[Path] = None) -> Config:
     return Config(
         paragraph=_load_paragraph(raw.get("paragraph", {}) or {}),
         question=_load_question(raw.get("question", {}) or {}),
+        answer=_load_answer(raw.get("answer", {}) or {}),
         confidence=_load_confidence(raw.get("confidence", {}) or {}),
         caret_anchor=_load_caret_anchor(raw.get("caret_anchor", {}) or {}),
         llm_review=_load_llm_review(raw.get("llm_review", {}) or {}),

@@ -20,7 +20,7 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 
 - [x] 7-Implement question detection: Q1/Q2/QN 1/Question prefixes, question marks, position and spacing signals; question recorded before answer processing
 - [x] 8-Implement question line grouping: merge physical lines of one question into a single question text with no internal line breaks
-- [ ] 9-Implement answer region detection: bbox after question using vertical position, blank-line spacing, handwriting density, indentation; exclude page headers
+- [x] 9-Implement answer region detection: bbox after question using vertical position, blank-line spacing, handwriting density, indentation; exclude page headers
 - [ ] 10-Implement paragraph boundary detection and splitting: weighted score (vertical gap primary + indentation + density, configurable weights), split before detailed OCR, unique paragraph IDs and order, one crop region per paragraph
 
 ## 4. Markup Detection

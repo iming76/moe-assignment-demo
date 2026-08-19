@@ -19,6 +19,11 @@ question:
   group_max_gap: 45           # px between question lines that still group
   short_line_ratio: 0.7       # continuation lines are shorter than this * full width
 
+answer:
+  trim_density_ratio: 0.25    # edge lines below this * median density are specks
+  margin_scribble_px: 60      # lines starting this far left of the margin...
+  min_ink_area: 800           # ...with less ink than this = margin scribble
+
 confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
