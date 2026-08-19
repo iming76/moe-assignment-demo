@@ -1,4 +1,4 @@
-# moe-research — Handwritten Student Script OCR & Reconstruction
+# handwriting-extraction-demo — Handwritten Student Script OCR & Reconstruction
 
 A proof-of-concept pipeline that transcribes **handwritten student scripts** (PDF or
 image) into structured, reviewable OCR output — preserving the original visual
@@ -76,8 +76,8 @@ app so frontend and backend stay in lockstep.
 
 ```
 backend/           Python pipeline + FastAPI (outside the turbo workspace by design)
-apps/web/          Next.js review frontend (@moe-research/web)
-packages/types/    Shared TS contract (@moe-research/types)
+apps/web/          Next.js review frontend (@handwriting-extraction-demo/web)
+packages/types/    Shared TS contract (@handwriting-extraction-demo/types)
 openspec/          Spec-driven workflow: capability specs + archived change
 data/              Sample input documents
 storage/           Pipeline artifacts per document (gitignored)

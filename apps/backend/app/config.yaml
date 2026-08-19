@@ -1,0 +1,112 @@
+# Pipeline configuration (task 3). All thresholds/weights/epsilons live here;
+# named defaults are in config.py and this file overrides them.
+
+paragraph:
+  # Paragraph boundary score weights (spec Section 12). Weights are normalized
+  # at load time if they don't sum to 1.
+  weights:
+    vertical_gap: 0.55
+    indentation: 0.25
+    density: 0.20
+  # A vertical gap at least this many multiples of median line height counts
+  # as a full-strength boundary signal.
+  gap_multiple: 1.6
+  # Weighted boundary score (0..1) at which a paragraph break is emitted.
+  threshold: 0.5
+
+question:
+  header_height_factor: 4.0   # lines taller than this * median = header block
+  group_max_gap: 45           # px between question lines that still group
+  short_line_ratio: 0.7       # continuation lines are shorter than this * full width
+
+answer:
+  trim_density_ratio: 0.25    # edge lines below this * median density are specks
+  margin_scribble_px: 60      # lines starting this far left of the margin...
+  min_ink_area: 800           # ...with less ink than this = margin scribble
+
+highlight:
+  hue_min: 18                 # yellow HSV window (OpenCV hue 0-179)
+  hue_max: 40
+  sat_min: 60
+  sat_max: 255
+  val_min: 120
+  val_max: 255
+  cleanup_size: 5
+  min_area: 400
+
+strikethrough:
+  open_kernel: 25             # horizontal open: keeps long horizontal runs
+  min_stroke_len: 80          # px; longer than any word
+  max_stroke_thickness: 20    # px; joined multi-pass strikes stay thin
+  join_gap: 20                # px horizontal gap joined across fragments
+  join_height: 9              # px vertical gap joined (diagonal strokes)
+  min_aspect: 3               # width/height ratio for near-horizontal strokes
+  min_crossed_gap: 6          # stroke must cross inter-word space
+
+caret:
+  symbol_min: 5               # px; caret symbol component size window
+  symbol_max: 35
+  symbol_min_area: 20
+  symbol_max_area: 600
+  symbol_bottom_frac: 0.0     # symbols vary (top or bottom of band)
+  symbol_below_slack: 8       # px the symbol may dip below the band
+  insert_above: 60            # inserted text floats within this above the symbol
+  insert_min_above: 10        # inserted text starts at least this far above the symbol
+  insert_max_dx: 60           # horizontal window around the symbol
+  insert_max_width: 120       # inserted text is short (1-2 words)
+  insert_max_height: 70       # two-row insertions ("in\nlife") allowed
+
+ocr:
+  max_new_tokens: 128
+
+confidence:
+  # Low-confidence rules (spec Section 35)
+  accept_threshold: 0.90      # >= accepted
+  review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
+
+caret_anchor:
+  gap_epsilon_px: 8           # two candidate gaps within this distance = ambiguous
+
+llm_review:
+  enabled: false              # off by default (spec Section 39.1.6)
+  model: ""                   # vision-capable LLM; only matters when enabled
+  triggers:
+    caret_anchor:
+      gap_epsilon_px: 8
+    low_confidence:
+      threshold: 0.70
+      include_review_recommended: false
+  batch: true                 # group all flagged items of a page into one call
+  max_calls_per_page: 10
+  cache: true                 # key = hash(crop bytes + candidate list)
+
+storage:
+  root: storage
+
+ingestion:
+  render_dpi: 150             # DPI used when rendering PDF pages to images
+
+preprocess:
+  denoise_h: 10               # fastNlMeansDenoising strength
+  clahe_clip_limit: 2.0
+  clahe_grid: 8
+  max_deskew_deg: 15.0        # deskew corrections beyond this are clamped
+  adaptive_block_size: 31     # adaptiveThreshold neighbourhood (odd)
+  adaptive_c: 15
+  morph_close_size: 3
+  morph_open_size: 2
+
+segment:
+  rule_kernel_width: 60       # horizontal open kernel; rules are the only long runs
+  margin_kernel_height: 60    # vertical open kernel; margin lines are long verticals
+  rule_max_thickness: 6
+  line_gap_tolerance: 4
+  min_row_ink: 12             # rows below this are valleys/gaps, not ink
+  min_line_ink_area: 150
+  word_gap_tolerance: 3
+  min_col_ink: 3              # cols below this are inter-word valleys
+  min_word_width: 4
+  page_crop_left: 10          # px zeroed at page edges (vertical margin lines)
+  page_crop_right: 15
+  page_crop_top: 0
+  page_crop_bottom: 0
