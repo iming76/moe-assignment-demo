@@ -7,8 +7,8 @@ Numbering: plain numbers run sequentially (each depends on the previous); letter
 - [x] 1-Scaffold monorepo: turbo.json, pnpm-workspace.yaml, apps/web (Next.js + TypeScript), packages/types, backend/ skeleton; Python backend stays outside turbo
 - [x] 2a-Implement shared data schemas in backend/schemas.py (PageImage, BoundingBox, Question, Paragraph, Crop, OCRResult, LLMReview, full document JSON)
 - [x] 2b-Implement mirrored TypeScript contract in packages/types matching backend JSON schemas
-- [ ] 3-Implement config module: named constants + YAML loader for paragraph weights, confidence thresholds, gap epsilon, and llm_review settings (enabled: false default)
-- [ ] 4-Implement storage layout helpers (originals/rendered/processed/crops/ocr/output) and document state machine module (UPLOADED → … → EXPORTED)
+- [x] 3-Implement config module: named constants + YAML loader for paragraph weights, confidence thresholds, gap epsilon, and llm_review settings (enabled: false default)
+- [x] 4-Implement storage layout helpers (originals/rendered/processed/crops/ocr/output) and document state machine module (UPLOADED → … → EXPORTED)
 
 ## 2. Document Ingestion
 
