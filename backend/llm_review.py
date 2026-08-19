@@ -16,7 +16,7 @@ from typing import Callable, Optional
 
 import config as config_module
 from reconstruct import anchor_caret_deterministic
-from schemas import BoundingBox, Caret, LLMReview
+from schemas import BoundingBox, Caret, LLMReview, OCRResult
 
 # A pluggable vision-LLM client: payload dict -> raw response dict (or None).
 LLMClient = Callable[[dict], Optional[dict]]
@@ -83,6 +83,46 @@ class LLMReviewStage:
                 reviews.append(review)
         return reviews
 
+    # ------------------------------------------------------------------ 16b
+    def low_confidence_reviews(
+        self, page_number: int, results: list[OCRResult]
+    ) -> list[LLMReview]:
+        """Spec 39.1.3: <0.70 always sent; 0.70-0.89 only when configured;
+        >=0.90 never. The LLM selects among TrOCR N-best candidates by index;
+        a free-form fallback is diff-validated against top-1 and rejected on
+        signs of normalization."""
+        cfg = config_module.CONFIG.llm_review
+        low = cfg.triggers.low_confidence
+        reviews: list[LLMReview] = []
+        for result in results:
+            if result.confidence >= config_module.CONFIG.confidence.accept_threshold:
+                continue  # >= 0.90 is never sent
+            if (
+                result.confidence >= low.threshold
+                and not low.include_review_recommended
+            ):
+                continue  # 0.70-0.89 only when configured
+            candidates = [c["text"] for c in result.candidates] or [result.text]
+            review = self._ask(
+                page_number,
+                trigger="low_confidence",
+                target_id=result.cropId,
+                crop_paths=[result.cropId],
+                candidates=candidates,
+                raw_payload={
+                    "question": "Select the candidate index matching the ink.",
+                    "candidates": candidates,
+                    "top1": result.text,
+                },
+                valid=lambda resp, cands=candidates: _valid_choice(resp, cands),
+                fallback=0,
+                agreed=lambda chosen: chosen == 0,
+            )
+            if review is not None:
+                result.llmReview = review
+                reviews.append(review)
+        return reviews
+
     def _ask(
         self,
         page_number: int,
@@ -124,3 +164,29 @@ class LLMReviewStage:
 def _valid_anchor(resp: dict, n_gaps: int) -> bool:
     idx = resp.get("anchorIndex", resp.get("chosen", resp.get("index")))
     return isinstance(idx, int) and 0 <= idx < n_gaps
+
+
+def _valid_choice(resp: dict, candidates: list[str]) -> bool:
+    idx = resp.get("index", resp.get("chosen"))
+    if isinstance(idx, int) and 0 <= idx < len(candidates):
+        return True
+    text = resp.get("text")
+    if isinstance(text, str) and candidates:
+        top1 = candidates[0]
+        if _looks_normalized(text, top1):
+            return False  # autocorrect signs → reject
+        return _char_diff_ok(text, top1)
+    return False
+
+
+def _looks_normalized(text: str, top1: str) -> bool:
+    """Signs of autocorrection: changed case or fixed punctuation."""
+    if text == top1:
+        return False
+    return text.lower() == top1.lower() or text.capitalize() == top1.capitalize()
+
+
+def _char_diff_ok(text: str, top1: str) -> bool:
+    import difflib
+
+    return difflib.SequenceMatcher(None, text, top1).ratio() >= 0.8
