@@ -38,6 +38,7 @@ confidence:
   # Low-confidence rules (spec Section 35)
   accept_threshold: 0.90      # >= accepted
   review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
+  paragraph_match_threshold: 0.85   # below this, line vs paragraph OCR text disagree too much
 
 vision_llm:
   provider: openai

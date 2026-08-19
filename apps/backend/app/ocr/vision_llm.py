@@ -22,6 +22,9 @@ Provider = Callable[[dict[str, Any], bytes], dict[str, Any]]
 PROMPT_PATH = Path(__file__).with_name("prompts") / "line_transcription.md"
 LINE_TRANSCRIPTION_PROMPT = PROMPT_PATH.read_text(encoding="utf-8").strip()
 
+PARAGRAPH_PROMPT_PATH = Path(__file__).with_name("prompts") / "paragraph_transcription.md"
+PARAGRAPH_TRANSCRIPTION_PROMPT = PARAGRAPH_PROMPT_PATH.read_text(encoding="utf-8").strip()
+
 REQUEST_SCHEMA_VERSION = "vision-ocr-v1"
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -61,6 +64,42 @@ class VisionLLMClient:
             "schemaVersion": REQUEST_SCHEMA_VERSION,
             "model": self.config.model,
             "instruction": LINE_TRANSCRIPTION_PROMPT,
+            "cropId": crop_id,
+            "responseSchema": {
+                "text": "string",
+                "confidence": "number[0,1]",
+                "uncertainty": [
+                    {"start": "integer", "end": "integer", "reason": "string"}
+                ],
+            },
+        }
+        image = crop_path.read_bytes()
+        key = make_cache_key(image, request)
+        raw, reason = self._request(request, image, key, page_number)
+        if raw is None:
+            return OCRResult(
+                cropId=crop_id,
+                text="",
+                confidence=0.0,
+                model=self.config.model,
+                requestSchemaVersion=REQUEST_SCHEMA_VERSION,
+                cacheKey=key,
+                validationState="unavailable",
+                reviewState="required",
+                reviewRequiredReason=reason,
+            )
+        return parse_line_response(
+            raw, crop_id, self.config.model, REQUEST_SCHEMA_VERSION, key
+        )
+
+    def transcribe_paragraph(
+        self, crop_path: Path, crop_id: str, page_number: int
+    ) -> OCRResult:
+        request = {
+            "type": "paragraph_transcription",
+            "schemaVersion": REQUEST_SCHEMA_VERSION,
+            "model": self.config.model,
+            "instruction": PARAGRAPH_TRANSCRIPTION_PROMPT,
             "cropId": crop_id,
             "responseSchema": {
                 "text": "string",

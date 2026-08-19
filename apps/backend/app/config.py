@@ -59,6 +59,7 @@ DEFAULT_QUESTION_SHORT_LINE_RATIO = 0.7  # continuation lines are shorter than t
 # Low-confidence rules (spec Section 35).
 DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD = 0.90
 DEFAULT_CONFIDENCE_REVIEW_THRESHOLD = 0.70
+DEFAULT_PARAGRAPH_MATCH_THRESHOLD = 0.85  # below this, line/paragraph OCR disagree too much
 
 # OpenAI Vision LLM transcription.
 DEFAULT_VISION_PROVIDER = "openai"
@@ -150,6 +151,7 @@ class AnswerConfig:
 class ConfidenceConfig:
     accept_threshold: float = DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD
     review_threshold: float = DEFAULT_CONFIDENCE_REVIEW_THRESHOLD
+    paragraph_match_threshold: float = DEFAULT_PARAGRAPH_MATCH_THRESHOLD
 
     def classify(self, confidence: float) -> str:
         """>= accept: accepted; >= review: review_recommended; else review_required."""
@@ -292,6 +294,9 @@ def _load_confidence(raw: dict[str, Any]) -> ConfidenceConfig:
     return ConfidenceConfig(
         accept_threshold=_num(raw, "accept_threshold", DEFAULT_CONFIDENCE_ACCEPT_THRESHOLD),
         review_threshold=_num(raw, "review_threshold", DEFAULT_CONFIDENCE_REVIEW_THRESHOLD),
+        paragraph_match_threshold=_num(
+            raw, "paragraph_match_threshold", DEFAULT_PARAGRAPH_MATCH_THRESHOLD
+        ),
     )
 
 

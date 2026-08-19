@@ -445,6 +445,7 @@ class DocumentPage:
     highlights: list[Highlight] = field(default_factory=list)
     crops: list[Crop] = field(default_factory=list)
     ocr: list[OCRResult] = field(default_factory=list)
+    paragraphOcr: list[OCRResult] = field(default_factory=list)
 
     def to_json(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -458,6 +459,8 @@ class DocumentPage:
         d["highlights"] = [h.to_json() for h in self.highlights]
         d["crops"] = [c.to_json() for c in self.crops]
         d["ocr"] = [o.to_json() for o in self.ocr]
+        if self.paragraphOcr:
+            d["paragraphOcr"] = [o.to_json() for o in self.paragraphOcr]
         return d
 
     @staticmethod
@@ -470,6 +473,7 @@ class DocumentPage:
             highlights=[Highlight.from_json(h) for h in d.get("highlights", [])],
             crops=[Crop.from_json(c) for c in d.get("crops", [])],
             ocr=[OCRResult.from_json(o) for o in d.get("ocr", [])],
+            paragraphOcr=[OCRResult.from_json(o) for o in d.get("paragraphOcr", [])],
         )
 
 

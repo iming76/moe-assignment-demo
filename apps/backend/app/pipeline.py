@@ -119,6 +119,15 @@ def process_document(
             page.ocr.append(result)
             if on_ocr_progress is not None:
                 on_ocr_progress(i, len(ocr_crops))
+        # paragraph-level OCR: a cross-check signal only, never a text source.
+        # Kept out of on_ocr_progress (that tracks the line pass the UI shows).
+        paragraph_crops = [c for c in page.crops if c.type == "paragraph"]
+        for crop in paragraph_crops:
+            crop_path = layout.doc_root / crop.path
+            result = vision.transcribe_paragraph(crop_path, crop.id, page_meta.pageNumber)
+            result.cropId = crop.id
+            persist_ocr(layout, page_meta.pageNumber, result)
+            page.paragraphOcr.append(result)
         if document.state == "CROPS_GENERATED":
             document.state = advance(document.state, "OCR_PROCESSING")
 
