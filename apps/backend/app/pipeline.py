@@ -1,19 +1,7 @@
-"""Pipeline orchestrator (task 17).
-
-One short orchestrator wiring the stage modules in order and advancing the
-document state machine per stage (spec Section 40):
-
-    UPLOADED → NORMALIZED → QUESTION_DETECTED → ANSWER_DETECTED →
-    PARAGRAPHS_DETECTED → CROPS_GENERATED → OCR_PROCESSING →
-    MARKUP_RECONSTRUCTION → REVIEW_REQUIRED → APPROVED → EXPORTED
-
-Every artifact is retained in the storage layout (spec Sections 36-37).
-"""
-
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import cv2
 

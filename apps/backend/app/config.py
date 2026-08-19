@@ -65,8 +65,6 @@ DEFAULT_VISION_PROVIDER = "openai"
 DEFAULT_VISION_MODEL = "gpt-5.4-mini"
 DEFAULT_VISION_ENDPOINT = "https://api.openai.com/v1/responses"
 DEFAULT_VISION_API_KEY_ENV = "OPENAI_API_KEY"
-DEFAULT_VISION_SCHEMA_VERSION = "vision-ocr-v1"
-DEFAULT_VISION_PROMPT_VERSION = "literal-v3"
 DEFAULT_VISION_MAX_CALLS_PER_PAGE = 50
 DEFAULT_VISION_CACHE = True
 
@@ -90,6 +88,7 @@ DEFAULT_RULE_KERNEL_WIDTH = 60  # horizontal open kernel; rules are the only lon
 DEFAULT_MARGIN_KERNEL_HEIGHT = 60  # vertical open kernel; margin lines are long verticals
 DEFAULT_RULE_ROW_WIDTH_RATIO = 0.6   # (legacy, unused by morph removal)
 DEFAULT_RULE_MAX_THICKNESS = 6       # px; rules thicker than this are kept as ink
+DEFAULT_RULE_MERGE_GAP = 8           # px; rule fragments this close are one broken rule
 DEFAULT_LINE_GAP_TOLERANCE = 4       # blank rows allowed inside one line
 DEFAULT_MIN_ROW_INK = 12             # rows below this are valleys/gaps, not ink
 DEFAULT_MIN_LINE_INK_AREA = 150
@@ -167,8 +166,6 @@ class VisionLLMConfig:
     model: str = DEFAULT_VISION_MODEL
     endpoint: str = DEFAULT_VISION_ENDPOINT
     api_key_env: str = DEFAULT_VISION_API_KEY_ENV
-    request_schema_version: str = DEFAULT_VISION_SCHEMA_VERSION
-    prompt_version: str = DEFAULT_VISION_PROMPT_VERSION
     max_calls_per_page: int = DEFAULT_VISION_MAX_CALLS_PER_PAGE
     cache: bool = DEFAULT_VISION_CACHE
 
@@ -201,6 +198,7 @@ class SegmentConfig:
     margin_kernel_height: int = DEFAULT_MARGIN_KERNEL_HEIGHT
     rule_row_width_ratio: float = DEFAULT_RULE_ROW_WIDTH_RATIO
     rule_max_thickness: int = DEFAULT_RULE_MAX_THICKNESS
+    rule_merge_gap: int = DEFAULT_RULE_MERGE_GAP
     line_gap_tolerance: int = DEFAULT_LINE_GAP_TOLERANCE
     min_row_ink: int = DEFAULT_MIN_ROW_INK
     min_line_ink_area: int = DEFAULT_MIN_LINE_INK_AREA
@@ -302,8 +300,6 @@ def _load_vision_llm(raw: dict[str, Any]) -> VisionLLMConfig:
         provider=str(raw.get("provider", DEFAULT_VISION_PROVIDER)),
         model=str(raw.get("model", DEFAULT_VISION_MODEL)), endpoint=str(raw.get("endpoint", DEFAULT_VISION_ENDPOINT)),
         api_key_env=str(raw.get("api_key_env", DEFAULT_VISION_API_KEY_ENV)),
-        request_schema_version=str(raw.get("request_schema_version", DEFAULT_VISION_SCHEMA_VERSION)),
-        prompt_version=str(raw.get("prompt_version", DEFAULT_VISION_PROMPT_VERSION)),
         max_calls_per_page=_int(raw, "max_calls_per_page", DEFAULT_VISION_MAX_CALLS_PER_PAGE),
         cache=_bool(raw, "cache", DEFAULT_VISION_CACHE),
     )
@@ -339,6 +335,7 @@ def _load_segment(raw: dict[str, Any]) -> SegmentConfig:
         margin_kernel_height=_int(raw, "margin_kernel_height", DEFAULT_MARGIN_KERNEL_HEIGHT),
         rule_row_width_ratio=_num(raw, "rule_row_width_ratio", DEFAULT_RULE_ROW_WIDTH_RATIO),
         rule_max_thickness=_int(raw, "rule_max_thickness", DEFAULT_RULE_MAX_THICKNESS),
+        rule_merge_gap=_int(raw, "rule_merge_gap", DEFAULT_RULE_MERGE_GAP),
         line_gap_tolerance=_int(raw, "line_gap_tolerance", DEFAULT_LINE_GAP_TOLERANCE),
         min_row_ink=_int(raw, "min_row_ink", DEFAULT_MIN_ROW_INK),
         min_line_ink_area=_int(raw, "min_line_ink_area", DEFAULT_MIN_LINE_INK_AREA),

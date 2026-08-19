@@ -44,8 +44,6 @@ vision_llm:
   model: gpt-5.4-mini
   endpoint: https://api.openai.com/v1/responses
   api_key_env: OPENAI_API_KEY
-  request_schema_version: vision-ocr-v1
-  prompt_version: literal-v3
   max_calls_per_page: 50
   cache: true
 
@@ -69,6 +67,7 @@ segment:
   rule_kernel_width: 60       # horizontal open kernel; rules are the only long runs
   margin_kernel_height: 60    # vertical open kernel; margin lines are long verticals
   rule_max_thickness: 6
+  rule_merge_gap: 8           # px; rule fragments this close are one broken rule
   line_gap_tolerance: 4
   min_row_ink: 12             # rows below this are valleys/gaps, not ink
   min_line_ink_area: 150

@@ -45,7 +45,23 @@ def ruled_line_bands(ink: np.ndarray) -> list[tuple[int, int]]:
             start = None
     if start is not None:
         bands.append((start, len(active_rows) - 1))
-    return bands
+    return _merge_close_bands(bands, cfg.rule_merge_gap)
+
+
+def _merge_close_bands(
+    bands: list[tuple[int, int]], gap_tolerance: int
+) -> list[tuple[int, int]]:
+    """Merge bands separated by a small gap (a rule broken by crossing ink)."""
+    if not bands:
+        return bands
+    merged = [bands[0]]
+    for start, end in bands[1:]:
+        prev_start, prev_end = merged[-1]
+        if start - prev_end - 1 <= gap_tolerance:
+            merged[-1] = (prev_start, end)
+        else:
+            merged.append((start, end))
+    return merged
 
 
 def remove_ruled_lines(ink: np.ndarray) -> np.ndarray:

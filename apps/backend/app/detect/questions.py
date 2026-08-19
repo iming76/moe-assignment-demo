@@ -1,21 +1,8 @@
-"""Question detection + multi-line grouping (tasks 7 & 8).
-
-Spec Sections 7-9. The question is recorded before answer processing.
-
-Signals (task 7): Q1/Q2/QN 1/Question prefixes and question marks (when OCR
-text is available), plus position and spacing signals (always): the question
-is the first content line after the page header, separated from the answer by
-a paragraph-scale gap.
-
-Grouping (task 8): physical lines of one question merge into a single
-Question with no internal line breaks; continuation lines are short lines
-that do not reach the full writing width and sit within the grouping gap.
-"""
-
 from __future__ import annotations
 
 import re
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 from ..config import CONFIG
 from ..imaging.opencv_analysis import LineRegion, median_line_height

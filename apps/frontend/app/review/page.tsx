@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { BoundingBox, Document, DocumentPage } from "@/lib/types";
+import type { OverlayKey } from "@/constant/overlay";
 import { fetchDocument } from "@/lib/api";
 import ImageViewer from "@/components/review/ImageViewer";
 import ParagraphTree from "@/components/review/ParagraphTree";
@@ -61,6 +62,9 @@ function ReviewPageInner() {
 
   const page: DocumentPage | undefined = doc?.pages[pageIdx];
 
+  if (!page) {
+    return <RedirectHomeCountdown seconds={5} />;
+  }
   return (
     <div className="grid grid-cols-3 gap-4">
       <Card className="flex col-span-2 flex-col mb-4">
@@ -115,15 +119,20 @@ function ReviewPageInner() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col">
               <h2 className="text-lg font-semibold">Extraction Output</h2>
-              <p className="text-xs">Click on the paragraph and text to see the extracted region</p>
+              <p className="text-xs">
+                Click a paragraph or text to view its extracted region.
+              </p>
             </div>
             <div className="flex flex-col max-h-[calc(100vh-12rem)] overflow-auto py-4 px-2">
               {doc && page && (
                 <div className="flex flex-col gap-4">
                   <ParagraphTree
+                    docId={doc.documentId}
+                    doc={doc}
                     page={page}
                     selected={selected}
                     onSelect={setSelected}
+                    onChanged={() => load(docId)}
                   />
                   <FinalOutput doc={doc} />
                 </div>
@@ -133,5 +142,25 @@ function ReviewPageInner() {
         </Card>
       </aside>
     </div>
+  );
+}
+
+function RedirectHomeCountdown({ seconds }: { seconds: number }) {
+  const router = useRouter();
+  const [remaining, setRemaining] = useState(seconds);
+
+  useEffect(() => {
+    if (remaining <= 0) {
+      router.push("/");
+      return;
+    }
+    const timer = setTimeout(() => setRemaining((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [remaining, router]);
+
+  return (
+    <p>
+      Document not found. Redirecting to home in {remaining}s...
+    </p>
   );
 }

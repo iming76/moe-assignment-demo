@@ -1,3 +1,6 @@
+import { MdCheckBoxOutlineBlank, MdCheckBox } from "react-icons/md";
+
+
 export const STAGES = [
   "NORMALIZED",
   "QUESTION_DETECTED",
@@ -23,17 +26,16 @@ export default function ProgressStages({
         return (
           <li
             key={stage}
-            className={`flex items-center gap-3 py-1.5 ${done ? "text-fg" : "text-muted"}`}
+            className={`flex items-center gap-3 py-1.5 ${done ? "opacity-90" : "opacity-50"}`}
           >
-            <span
-              aria-hidden
-              className={`inline-block h-4 w-4 shrink-0 rounded-[3px] border border-muted ${
-                done ? "bg-fg" : "bg-transparent"
-              }`}
-            />
+            {done ? (
+              <MdCheckBox className="text-green-500" />
+            ) : (
+              <MdCheckBoxOutlineBlank className="text-gray-400" />
+            )}
             {stage.replace(/_/g, " ")}
             {stage === "OCR_PROCESSING" && currentStage === "OCR_PROCESSING" && ocrProgress && (
-              <span className="text-[0.8125rem] text-muted">
+              <span className="text-[0.8125rem]">
                 ({ocrProgress.completed}/{ocrProgress.total})
               </span>
             )}

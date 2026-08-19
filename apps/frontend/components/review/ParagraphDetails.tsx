@@ -1,22 +1,34 @@
 "use client";
 
-import type { BoundingBox, OCRResult, Paragraph } from "@/lib/types";
+import type { BoundingBox, Document, OCRResult, Paragraph } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import CropInspector from "@/components/review/CropInspector";
 
 export default function ParagraphDetails({
+  docId,
+  doc,
   paragraph,
   ocr,
+  selected,
   onSelect,
+  onChanged,
 }: {
+  docId: string;
+  doc: Document;
   paragraph: Paragraph;
   ocr: OCRResult[];
+  selected: { kind: string; bbox: BoundingBox; label: string; cropId?: string } | null;
   onSelect: (s: {
     kind: string;
     bbox: BoundingBox;
     label: string;
     cropId?: string;
   }) => void;
+  onChanged: () => void;
 }) {
+  const isSelected =
+    !!selected &&
+    (selected.label === paragraph.id || paragraph.lines.some((ln) => ln.id === selected.label));
   return (
     <details open={false} className="border-b border-gray-300 border-dotted pb-2">
       <summary
@@ -44,7 +56,7 @@ export default function ParagraphDetails({
         >
           <p className="leading-loose">{paragraph.text}</p>
         </div>
-        <ul className="bg-accent p-4 rounded-md flex flex-col gap-4 mb-6">
+        <ul className="bg-accent p-4 rounded-md flex flex-col gap-4">
           {paragraph.lines.map((ln) => {
             const o = ocr.find((o) => o.cropId === ln.cropId);
             const low = o && o.confidence < 0.7;
@@ -87,6 +99,16 @@ export default function ParagraphDetails({
             );
           })}
         </ul>
+        <div className="mb-4">
+          {isSelected && selected && (
+            <CropInspector
+              docId={docId}
+              selected={selected}
+              doc={doc}
+              onChanged={onChanged}
+            />
+          )}
+        </div>
       </div>
     </details>
   );
