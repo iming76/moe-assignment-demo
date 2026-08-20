@@ -3,18 +3,14 @@
 Spec Section 34 + human-review capability: after reconstruction the document
 enters REVIEW_REQUIRED; low-confidence lines are flagged with configurable
 thresholds (>= 0.90 accepted, 0.70-0.89 review recommended, < 0.70 review
-required); manual corrections are recorded; approval moves the state machine
-to APPROVED and export writes the final JSON (EXPORTED).
+required).
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from .config import CONFIG
-from .schemas import Document, ReviewCorrection, ReviewDecision
+from .schemas import Document
 from .state_machine import transition
-from .storage import StorageLayout
 
 
 def classify(confidence: float) -> str:
@@ -39,89 +35,3 @@ def enter_review(document: Document) -> Document:
     """Move MARKUP_RECONSTRUCTION → REVIEW_REQUIRED."""
     document.state = transition(document.state, "REVIEW_REQUIRED")
     return document
-
-
-def submit_correction(
-    document: Document,
-    crop_id: str,
-    corrected_text: str,
-    reason: str = "",
-) -> ReviewCorrection:
-    """Record a manual correction while in REVIEW_REQUIRED."""
-    if document.state != "REVIEW_REQUIRED":
-        raise ValueError(f"Corrections are only accepted in REVIEW_REQUIRED, not {document.state}")
-    original = ""
-    for page in document.pages:
-        for result in page.ocr:
-            if result.cropId == crop_id:
-                original = result.text
-    correction = ReviewCorrection(
-        id=f"corr_{len(document.corrections) + 1:03d}",
-        cropId=crop_id,
-        originalText=original,
-        correctedText=corrected_text,
-        reason=reason,
-        createdAt=datetime.now(timezone.utc).isoformat(),
-    )
-    document.corrections.append(correction)
-    return correction
-
-
-def record_review_decision(
-    document: Document, target_id: str, target_type: str, decision: str,
-    value=None, reason: str = "",
-) -> ReviewDecision:
-    """Record an accept/reject/manual decision and update the target state."""
-    if document.state != "REVIEW_REQUIRED":
-        raise ValueError("Review decisions require REVIEW_REQUIRED state")
-    if decision not in {"accept", "reject", "correct"}:
-        raise ValueError("decision must be accept, reject, or correct")
-    found = False
-    if target_type == "ocr":
-        for page in document.pages:
-            for result in page.ocr:
-                if result.cropId != target_id:
-                    continue
-                found = True
-                result.reviewState = {"accept": "accepted", "reject": "rejected", "correct": "corrected"}[decision]
-                if decision == "correct":
-                    if not isinstance(value, str):
-                        raise ValueError("OCR correction value must be text")
-                    submit_correction(document, target_id, value, reason)
-    else:
-        raise ValueError("targetType must be ocr")
-    if not found:
-        raise ValueError(f"Unknown review target: {target_id}")
-    review = ReviewDecision(id=f"decision_{len(document.reviewDecisions) + 1:03d}", targetId=target_id,
-                            targetType=target_type, decision=decision, value=value, reason=reason,
-                            createdAt=datetime.now(timezone.utc).isoformat())
-    document.reviewDecisions.append(review)
-    return review
-
-
-def apply_corrections(document: Document) -> Document:
-    """Rebuild paragraph/final text with corrections substituted."""
-    corrected = {c.cropId: c.correctedText for c in document.corrections}
-    for page in document.pages:
-        for result in page.ocr:
-            if result.cropId in corrected:
-                result.text = corrected[result.cropId]
-    return document
-
-
-def approve(document: Document) -> Document:
-    document.state = transition(document.state, "APPROVED")
-    return document
-
-
-def export_document(document: Document, layout: StorageLayout) -> str:
-    """Write output/document.json and advance to EXPORTED. Returns rel path."""
-    import json
-
-    document.state = transition(document.state, "EXPORTED")
-    path = layout.output_json_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(document.to_json(), indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    return layout.rel(path)

@@ -173,21 +173,6 @@ export interface FinalOutput {
   answer: string;
 }
 
-/** Human review correction (spec Section 34). */
-export interface ReviewCorrection {
-  id: string;
-  cropId: string;
-  originalText: string;
-  correctedText: string;
-  reason?: string;
-  createdAt?: string;
-}
-
-export interface ReviewDecision {
-  id: string; targetId: string; targetType: "ocr";
-  decision: "accept" | "reject" | "correct"; value?: unknown; reason?: string; createdAt?: string;
-}
-
 /** Processing state machine (spec Section 40). */
 export type DocumentState =
   | "UPLOADED"
@@ -209,7 +194,5 @@ export interface Document {
   state: DocumentState;
   pages: DocumentPage[];
   final: FinalOutput;
-  corrections: ReviewCorrection[];
   llmReviews: LLMReview[];
-  reviewDecisions: ReviewDecision[];
 }

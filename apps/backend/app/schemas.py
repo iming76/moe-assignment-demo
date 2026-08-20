@@ -502,52 +502,6 @@ class FinalOutput:
 
 
 @dataclass
-class ReviewCorrection:
-    """Human review correction (spec Section 34)."""
-
-    id: str
-    cropId: str
-    originalText: str
-    correctedText: str
-    reason: str = ""
-    createdAt: str = ""
-
-    def to_json(self) -> dict[str, Any]:
-        return asdict(self)
-
-    @staticmethod
-    def from_json(d: dict[str, Any]) -> "ReviewCorrection":
-        return ReviewCorrection(
-            id=d["id"],
-            cropId=d["cropId"],
-            originalText=d["originalText"],
-            correctedText=d["correctedText"],
-            reason=d.get("reason", ""),
-            createdAt=d.get("createdAt", ""),
-        )
-
-
-@dataclass
-class ReviewDecision:
-    id: str
-    targetId: str
-    targetType: str
-    decision: str
-    value: Any = None
-    reason: str = ""
-    createdAt: str = ""
-
-    def to_json(self) -> dict[str, Any]:
-        return asdict(self)
-
-    @staticmethod
-    def from_json(d: dict[str, Any]) -> "ReviewDecision":
-        return ReviewDecision(id=d["id"], targetId=d["targetId"], targetType=d["targetType"],
-                              decision=d["decision"], value=d.get("value"), reason=d.get("reason", ""),
-                              createdAt=d.get("createdAt", ""))
-
-
-@dataclass
 class Document:
     """Complete internal JSON (spec Section 31)."""
 
@@ -556,9 +510,7 @@ class Document:
     state: str = "UPLOADED"
     pages: list[DocumentPage] = field(default_factory=list)
     final: FinalOutput = field(default_factory=FinalOutput)
-    corrections: list[ReviewCorrection] = field(default_factory=list)
     llmReviews: list[LLMReview] = field(default_factory=list)
-    reviewDecisions: list[ReviewDecision] = field(default_factory=list)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -567,9 +519,7 @@ class Document:
             "state": self.state,
             "pages": [p.to_json() for p in self.pages],
             "final": self.final.to_json(),
-            "corrections": [c.to_json() for c in self.corrections],
             "llmReviews": [r.to_json() for r in self.llmReviews],
-            "reviewDecisions": [r.to_json() for r in self.reviewDecisions],
         }
 
     @staticmethod
@@ -580,9 +530,7 @@ class Document:
             state=d.get("state", "UPLOADED"),
             pages=[DocumentPage.from_json(p) for p in d.get("pages", [])],
             final=FinalOutput.from_json(d.get("final", {})),
-            corrections=[ReviewCorrection.from_json(c) for c in d.get("corrections", [])],
             llmReviews=[LLMReview.from_json(r) for r in d.get("llmReviews", [])],
-            reviewDecisions=[ReviewDecision.from_json(r) for r in d.get("reviewDecisions", [])],
         )
 
 

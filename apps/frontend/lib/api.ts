@@ -57,39 +57,3 @@ export function artifactUrl(id: string, path: string): string {
   return `${API_BASE}/documents/${id}/artifacts/${path}`;
 }
 
-export async function submitCorrection(
-  id: string,
-  cropId: string,
-  correctedText: string,
-  reason?: string
-): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/documents/${id}/corrections`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cropId, correctedText, reason }),
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-
-export async function approveDocument(
-  id: string
-): Promise<{ state: string; output: string }> {
-  const res = await fetch(`${API_BASE}/documents/${id}/approve`, {
-    method: "POST",
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-
-export async function submitReviewDecision(
-  id: string, targetId: string, targetType: "ocr",
-  decision: "accept" | "reject" | "correct", value?: unknown
-): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/documents/${id}/review-decisions`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ targetId, targetType, decision, value }),
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}

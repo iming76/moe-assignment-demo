@@ -18,7 +18,7 @@ from .imaging.opencv_analysis import (
 )
 from .ingest.pages import ingest_document
 from .ocr.reconstruct import reconstruct_document
-from .review import enter_review, export_document
+from .review import enter_review
 from .ocr.vision_llm import VisionLLMClient, persist_ocr
 from .schemas import Document
 from .state_machine import transition
@@ -143,13 +143,3 @@ def process_document(
     if on_state_change is not None:
         on_state_change(document.state)
     return document
-
-
-def finalize_document(document: Document, layout: StorageLayout) -> str:
-    """APPROVED → EXPORTED; writes output/document.json. Returns rel path."""
-    from .review import apply_corrections, approve
-
-    apply_corrections(document)
-    reconstruct_document(document)
-    approve(document)
-    return export_document(document, layout)
