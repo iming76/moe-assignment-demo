@@ -68,6 +68,9 @@ DEFAULT_VISION_API_KEY_ENV = "OPENAI_API_KEY"
 DEFAULT_VISION_MAX_CALLS_PER_PAGE = 50
 DEFAULT_VISION_CACHE = True
 
+# PaddleOCR (local, non-LLM) transcription.
+DEFAULT_PADDLE_LANG = "en"
+
 DEFAULT_STORAGE_ROOT = "storage"
 
 # Document ingestion (spec Section 5.1).
@@ -168,6 +171,7 @@ class VisionLLMConfig:
     api_key_env: str = DEFAULT_VISION_API_KEY_ENV
     max_calls_per_page: int = DEFAULT_VISION_MAX_CALLS_PER_PAGE
     cache: bool = DEFAULT_VISION_CACHE
+    paddle_lang: str = DEFAULT_PADDLE_LANG
 
 
 @dataclass(frozen=True)
@@ -302,6 +306,7 @@ def _load_vision_llm(raw: dict[str, Any]) -> VisionLLMConfig:
         api_key_env=str(raw.get("api_key_env", DEFAULT_VISION_API_KEY_ENV)),
         max_calls_per_page=_int(raw, "max_calls_per_page", DEFAULT_VISION_MAX_CALLS_PER_PAGE),
         cache=_bool(raw, "cache", DEFAULT_VISION_CACHE),
+        paddle_lang=str(raw.get("paddle_lang", DEFAULT_PADDLE_LANG)),
     )
 
 

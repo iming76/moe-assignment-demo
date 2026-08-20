@@ -8,6 +8,7 @@ import time
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -51,8 +52,11 @@ class VisionLLMClient:
     layout: StorageLayout | None = None
 
     def __post_init__(self) -> None:
-        if self.provider is None and self.config.provider == "openai":
-            self.provider = self._openai_provider
+        if self.provider is None:
+            if self.config.provider == "openai":
+                self.provider = self._openai_provider
+            elif self.config.provider == "paddleocr":
+                self.provider = self._paddleocr_provider
 
     def transcribe_line(
         self, crop_path: Path, crop_id: str, page_number: int
@@ -179,6 +183,56 @@ class VisionLLMClient:
             raise ValueError("OpenAI structured output must be a JSON object")
         parsed["_openai"] = {"responseId": value.get("id"), "usage": value.get("usage")}
         return parsed
+
+
+    def _paddleocr_provider(self, request: dict[str, Any], image: bytes) -> dict[str, Any]:
+        import cv2
+        import numpy as np
+
+        engine = _get_paddle_ocr(self.config.paddle_lang)
+        array = np.frombuffer(image, dtype=np.uint8)
+        crop = cv2.imdecode(array, cv2.IMREAD_COLOR)
+        if crop is None:
+            raise ValueError("PaddleOCR received an undecodable image")
+        # Crops are already single lines, so recognition only (no detection).
+        result = engine.ocr(crop, det=False, cls=False)
+        if not result or not result[0]:
+            text, confidence = "", 0.0
+        else:
+            text, confidence = result[0][0]
+        return {
+            "text": text,
+            "confidence": float(confidence),
+            "uncertainty": [],
+            "_paddleocr": {"lang": self.config.paddle_lang},
+        }
+
+
+@lru_cache(maxsize=None)
+def _get_paddle_ocr(lang: str):
+    """One PaddleOCR engine per language, reused across crops (model load is slow)."""
+    _patch_numpy_sctypes()
+    from paddleocr import PaddleOCR
+
+    return PaddleOCR(use_angle_cls=True, lang=lang, show_log=False)
+
+
+def _patch_numpy_sctypes() -> None:
+    """paddleocr's imgaug dependency reads the ``numpy.sctypes`` dict that
+    numpy 2.0 removed; the project otherwise depends on numpy>=2 (opencv-python
+    5.x requires it). Restore just enough of the old attribute for imgaug's
+    import-time lookup to succeed."""
+    import numpy as np
+
+    if hasattr(np, "sctypes"):
+        return
+    np.sctypes = {  # type: ignore[attr-defined]
+        "int": [np.int8, np.int16, np.int32, np.int64],
+        "uint": [np.uint8, np.uint16, np.uint32, np.uint64],
+        "float": [np.float16, np.float32, np.float64],
+        "complex": [np.complex64, np.complex128],
+        "others": [bool, object, bytes, str, np.void],
+    }
 
 
 def _response_output_text(response: dict[str, Any]) -> str:

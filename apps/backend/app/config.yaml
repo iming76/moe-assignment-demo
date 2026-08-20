@@ -40,12 +40,13 @@ confidence:
   review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
 
 vision_llm:
-  provider: openai
+  provider: openai       # openai | paddleocr; overridden per-upload by the LLM/OCR toggle
   model: gpt-5.4-mini
   endpoint: https://api.openai.com/v1/responses
   api_key_env: OPENAI_API_KEY
   max_calls_per_page: 50
   cache: true
+  paddle_lang: en        # PaddleOCR recognition language
 
 storage:
   root: storage

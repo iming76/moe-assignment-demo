@@ -14,9 +14,18 @@ dependencies = [
     "PyMuPDF>=1.24",
     "pyyaml>=6.0",
     "python-dotenv>=1.0",
+    "paddlepaddle>=2.6",
+    "paddleocr==2.9.1",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "mypy>=1.0",
+    "pytest>=8.0",
 ]
+# paddleocr's transitive deps pin numpy<2.0, which would otherwise force
+# opencv-python down to a 4.x build with different deskew/threshold
+# behavior than the 5.x build the pipeline was tuned against (broke line
+# segmentation). paddleocr's recognition-only path works fine on numpy 2.x
+# in practice, so override its conservative upper bound.
+override-dependencies = ["numpy>=2"]

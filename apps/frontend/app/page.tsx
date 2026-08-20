@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   subscribeProgress,
   uploadDocument,
+  type OcrEngine,
   type ProgressEvent,
 } from "@/lib/api";
 import UploadDropzone from "@/components/home/UploadDropzone";
@@ -21,6 +22,7 @@ export default function Home() {
     completed: number;
     total: number;
   } | null>(null);
+  const [engine, setEngine] = useState<OcrEngine>("llm");
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -34,7 +36,7 @@ export default function Home() {
     setOcrProgress(null);
 
     try {
-      const result = await uploadDocument(file);
+      const result = await uploadDocument(file, engine);
       await new Promise<void>((resolve, reject) => {
         const unsubscribe = subscribeProgress(
           result.documentId,
@@ -71,6 +73,28 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center gap-4 p-4 w-full">
       <Card className="w-full max-w-lg">
         <CardContent className="p-12 text-center">
+          {!isUploading && (
+            <div className="mb-6 inline-flex rounded-lg border border-border p-1">
+              <Button
+                type="button"
+                variant={engine === "llm" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setEngine("llm")}
+                className="leading-0"
+              >
+                LLM
+              </Button>
+              <Button
+                type="button"
+                variant={engine === "ocr" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setEngine("ocr")}
+                className="leading-0"
+              >
+                OCR
+              </Button>
+            </div>
+          )}
           {!isUploading && (
             <UploadDropzone
               selectedFile={selectedFile}
