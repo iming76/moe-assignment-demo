@@ -47,7 +47,11 @@ def process_document(
     transcribed during OCR_PROCESSING, the pipeline's slowest stage.
     """
     layout = StorageLayout(document_id, root=root)
-    vision = VisionLLMClient(CONFIG.vision_llm, cache_dir=layout.doc_root / "ocr" / "vision_cache")
+    vision = VisionLLMClient(
+        CONFIG.vision_llm,
+        cache_dir=layout.doc_root / "ocr" / "vision_cache",
+        layout=layout,
+    )
 
     def advance(current: str, next_state: str) -> str:
         state = transition(current, next_state)

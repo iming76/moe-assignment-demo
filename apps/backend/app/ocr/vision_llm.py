@@ -48,6 +48,7 @@ class VisionLLMClient:
     cache: dict[str, dict[str, Any]] = field(default_factory=dict)
     budgets: dict[int, PageRequestBudget] = field(default_factory=dict)
     cache_dir: Path | None = None
+    layout: StorageLayout | None = None
 
     def __post_init__(self) -> None:
         if self.provider is None and self.config.provider == "openai":
@@ -72,7 +73,7 @@ class VisionLLMClient:
         }
         image = crop_path.read_bytes()
         key = make_cache_key(image, request)
-        raw, reason = self._request(request, image, key, page_number)
+        raw, reason = self._request(request, image, key, page_number, crop_id)
         if raw is None:
             return OCRResult(
                 cropId=crop_id,
@@ -90,7 +91,12 @@ class VisionLLMClient:
         )
 
     def _request(
-        self, request: dict[str, Any], image: bytes, key: str, page_number: int
+        self,
+        request: dict[str, Any],
+        image: bytes,
+        key: str,
+        page_number: int,
+        crop_id: str,
     ) -> tuple[dict[str, Any] | None, str | None]:
         if self.config.cache and key in self.cache:
             return self.cache[key], None
@@ -113,6 +119,8 @@ class VisionLLMClient:
             Exception
         ) as exc:  # provider errors must escalate, not abort the document
             return None, f"provider_failure:{type(exc).__name__}"
+        if self.layout is not None:
+            persist_llm_response(self.layout, page_number, crop_id, raw)
         if self.config.cache:
             self.cache[key] = raw
             if cache_path is not None:
@@ -218,6 +226,16 @@ def persist_ocr(layout: StorageLayout, page_number: int, result: OCRResult) -> P
         json.dumps(result.to_json(), indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    return path
+
+
+def persist_llm_response(
+    layout: StorageLayout, page_number: int, crop_id: str, raw: dict[str, Any]
+) -> Path:
+    """Persist one raw LLM response as ``llm/<page>/<cropId>.json``."""
+    path = layout.llm_json_path(page_number, crop_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(raw, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 
 
