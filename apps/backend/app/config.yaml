@@ -1,6 +1,49 @@
 # Pipeline configuration (task 3). All thresholds/weights/epsilons live here;
 # named defaults are in config.py and this file overrides them.
 
+vision_llm:
+  # provider: one of openai | openrouter (app/ocr/providers/).
+  # Swap by uncommenting one block below; endpoint/api_key_env/model travel together.
+  provider: openai
+  model: gpt-5.4-mini
+  endpoint: https://api.openai.com/v1/responses
+  api_key_env: OPENAI_API_KEY
+  # provider: openrouter
+  # model: qwen/qwen3-vl-8b-instruct
+  # endpoint: https://openrouter.ai/api/v1/chat/completions
+  # api_key_env: OPENROUTER_API_KEY
+  max_calls_per_page: 100
+  cache: true
+
+ingestion:
+  render_dpi: 150             # DPI used when rendering PDF pages to images
+
+preprocess:
+  denoise_h: 10               # fastNlMeansDenoising strength
+  clahe_clip_limit: 2.0
+  clahe_grid: 8
+  max_deskew_deg: 15.0        # deskew corrections beyond this are clamped
+  adaptive_block_size: 31     # adaptiveThreshold neighbourhood (odd)
+  adaptive_c: 15
+  morph_close_size: 3
+  morph_open_size: 2
+
+segment:
+  rule_kernel_width: 60       # horizontal open kernel; rules are the only long runs
+  margin_kernel_height: 60    # vertical open kernel; margin lines are long verticals
+  rule_max_thickness: 6
+  rule_merge_gap: 8           # px; rule fragments this close are one broken rule
+  line_gap_tolerance: 14
+  min_row_ink: 12             # rows below this are valleys/gaps, not ink
+  min_line_ink_area: 150
+  word_gap_tolerance: 3
+  min_col_ink: 3              # cols below this are inter-word valleys
+  min_word_width: 4
+  page_crop_left: 0          # px zeroed at page edges (vertical margin lines)
+  page_crop_right: 0
+  page_crop_top: 0
+  page_crop_bottom: 0
+
 paragraph:
   # Paragraph boundary score weights (spec Section 12). Weights are normalized
   # at load time if they don't sum to 1.
@@ -39,48 +82,5 @@ confidence:
   accept_threshold: 0.90      # >= accepted
   review_threshold: 0.70      # 0.70-0.89 review recommended; < 0.70 required
 
-vision_llm:
-  # provider: one of openai | openrouter (app/ocr/providers/).
-  # Swap by uncommenting one block below; endpoint/api_key_env/model travel together.
-  # provider: openai
-  # model: gpt-5.4-mini
-  # endpoint: https://api.openai.com/v1/responses
-  # api_key_env: OPENAI_API_KEY
-  provider: openrouter
-  model: qwen/qwen3-vl-8b-instruct
-  endpoint: https://openrouter.ai/api/v1/chat/completions
-  api_key_env: OPENROUTER_API_KEY
-  max_calls_per_page: 100
-  cache: true
-
 storage:
   root: storage
-
-ingestion:
-  render_dpi: 150             # DPI used when rendering PDF pages to images
-
-preprocess:
-  denoise_h: 10               # fastNlMeansDenoising strength
-  clahe_clip_limit: 2.0
-  clahe_grid: 8
-  max_deskew_deg: 15.0        # deskew corrections beyond this are clamped
-  adaptive_block_size: 31     # adaptiveThreshold neighbourhood (odd)
-  adaptive_c: 15
-  morph_close_size: 3
-  morph_open_size: 2
-
-segment:
-  rule_kernel_width: 60       # horizontal open kernel; rules are the only long runs
-  margin_kernel_height: 60    # vertical open kernel; margin lines are long verticals
-  rule_max_thickness: 6
-  rule_merge_gap: 8           # px; rule fragments this close are one broken rule
-  line_gap_tolerance: 14
-  min_row_ink: 12             # rows below this are valleys/gaps, not ink
-  min_line_ink_area: 150
-  word_gap_tolerance: 3
-  min_col_ink: 3              # cols below this are inter-word valleys
-  min_word_width: 4
-  page_crop_left: 0          # px zeroed at page edges (vertical margin lines)
-  page_crop_right: 0
-  page_crop_top: 0
-  page_crop_bottom: 0
