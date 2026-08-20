@@ -23,9 +23,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from .config import CONFIG
+from .logging_config import setup_logging
 from .pipeline import process_document
 from .schemas import Document
 from .storage import StorageLayout
+
+setup_logging()
 
 app = FastAPI(title="Handwritten Script OCR POC")
 

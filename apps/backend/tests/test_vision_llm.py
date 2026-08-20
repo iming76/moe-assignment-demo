@@ -6,6 +6,7 @@ import os
 from unittest.mock import patch
 
 from app.config import VisionLLMConfig
+from app.ocr.providers import openai as openai_provider
 from app.ocr.vision_llm import (
     LINE_TRANSCRIPTION_PROMPT,
     PROMPT_PATH,
@@ -62,10 +63,9 @@ class VisionLLMTests(unittest.TestCase):
 
         cfg = VisionLLMConfig(provider="openai", model="gpt-5.4-mini",
                               endpoint="https://api.openai.com/v1/responses", api_key_env="OPENAI_API_KEY")
-        client = VisionLLMClient(cfg)
         request = {"type": "line_transcription", "instruction": "literal", "cropId": "line1"}
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}), patch("urllib.request.urlopen", fake_urlopen):
-            result = client._openai_provider(request, b"png")
+            result = openai_provider.call(cfg, request, b"png")
 
         self.assertEqual(result["text"], "teh")
         self.assertEqual(result["_openai"]["responseId"], "resp_test")

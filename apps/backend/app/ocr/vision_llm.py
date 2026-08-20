@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
-import os
 import time
-import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -14,8 +11,12 @@ from typing import Any
 from dotenv import load_dotenv
 
 from ..config import VisionLLMConfig
+from ..logging_config import get_llm_logger
 from ..schemas import OCRResult, UncertaintyRange
 from ..storage import StorageLayout
+from .providers import PROVIDERS
+
+logger = get_llm_logger()
 
 Provider = Callable[[dict[str, Any], bytes], dict[str, Any]]
 
@@ -51,8 +52,11 @@ class VisionLLMClient:
     layout: StorageLayout | None = None
 
     def __post_init__(self) -> None:
-        if self.provider is None and self.config.provider == "openai":
-            self.provider = self._openai_provider
+        if self.provider is None:
+            provider_call = PROVIDERS.get(self.config.provider)
+            if provider_call is not None:
+                config = self.config
+                self.provider = lambda request, image: provider_call(config, request, image)
 
     def transcribe_line(
         self, crop_path: Path, crop_id: str, page_number: int
@@ -107,6 +111,10 @@ class VisionLLMClient:
                 self.cache[key] = cached
                 return cached, None
         if self.provider is None:
+            logger.error(
+                "no provider wired for config.provider=%r cropId=%s page=%s",
+                self.config.provider, crop_id, page_number,
+            )
             return None, "provider_unavailable"
         budget = self.budgets.setdefault(
             page_number, PageRequestBudget(self.config.max_calls_per_page)
@@ -118,7 +126,11 @@ class VisionLLMClient:
         except (
             Exception
         ) as exc:  # provider errors must escalate, not abort the document
-            return None, f"provider_failure:{type(exc).__name__}"
+            logger.exception(
+                "provider call failed cropId=%s page=%s provider=%s",
+                crop_id, page_number, self.config.provider,
+            )
+            return None, f"provider_failure:{type(exc).__name__}:{exc}"
         if self.layout is not None:
             persist_llm_response(self.layout, page_number, crop_id, raw)
         if self.config.cache:
@@ -130,96 +142,9 @@ class VisionLLMClient:
                 )
         return raw, None
 
-    def _openai_provider(self, request: dict[str, Any], image: bytes) -> dict[str, Any]:
-        api_key = os.environ.get(self.config.api_key_env, "")
-        if not api_key:
-            raise RuntimeError(f"Missing {self.config.api_key_env}")
-        schema = _line_schema()
-        prompt = f"Request schema version: {request.get('schemaVersion', REQUEST_SCHEMA_VERSION)}\n{request['instruction']}"
-        payload = {
-            "model": self.config.model,
-            "input": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "input_text", "text": prompt},
-                        {
-                            "type": "input_image",
-                            "image_url": "data:image/png;base64,"
-                            + base64.b64encode(image).decode("ascii"),
-                            "detail": "high",
-                        },
-                    ],
-                }
-            ],
-            "text": {
-                "format": {
-                    "type": "json_schema",
-                    "name": request["type"],
-                    "strict": True,
-                    "schema": schema,
-                }
-            },
-        }
-        body = json.dumps(payload).encode()
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        }
-        req = urllib.request.Request(
-            self.config.endpoint, data=body, headers=headers, method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=60) as response:
-            value = json.loads(response.read())
-        if not isinstance(value, dict):
-            raise ValueError("Provider response must be a JSON object")
-        output_text = _response_output_text(value)
-        parsed = json.loads(output_text)
-        if not isinstance(parsed, dict):
-            raise ValueError("OpenAI structured output must be a JSON object")
-        parsed["_openai"] = {"responseId": value.get("id"), "usage": value.get("usage")}
-        return parsed
-
-
-def _response_output_text(response: dict[str, Any]) -> str:
-    for item in response.get("output", []):
-        if not isinstance(item, dict) or item.get("type") != "message":
-            continue
-        for content in item.get("content", []):
-            if isinstance(content, dict) and content.get("type") == "output_text":
-                text = content.get("text")
-                if isinstance(text, str):
-                    return text
-    raise ValueError("OpenAI response did not contain output_text")
-
-
-def _line_schema() -> dict[str, Any]:
-    return {
-        "type": "object",
-        "properties": {
-            "text": {"type": "string"},
-            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "uncertainty": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "start": {"type": "integer", "minimum": 0},
-                        "end": {"type": "integer", "minimum": 1},
-                        "reason": {"type": "string"},
-                    },
-                    "required": ["start", "end", "reason"],
-                    "additionalProperties": False,
-                },
-            },
-        },
-        "required": ["text", "confidence", "uncertainty"],
-        "additionalProperties": False,
-    }
-
 
 def persist_ocr(layout: StorageLayout, page_number: int, result: OCRResult) -> Path:
-    """Persist one OpenAI OCR result as ``ocr/<page>/<cropId>.json``."""
+    """Persist one OCR result as ``ocr/<page>/<cropId>.json``."""
     path = layout.ocr_json_path(page_number, result.cropId)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
