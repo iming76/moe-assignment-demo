@@ -1,0 +1,20 @@
+{
+  "text": "retrieve information on school work from their friend if they are absent from school and",
+  "confidence": 0.97,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_022299b159ac0234006a86a34dfd748198a40d34fa310bbb1e",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 39,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1257
+    }
+  }
+}

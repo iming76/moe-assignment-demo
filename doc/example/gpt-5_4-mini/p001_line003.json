@@ -1,0 +1,31 @@
+{
+  "text": "with one another on the Internet. This means no need for hassles to <strikethrough>go took for</strikethrough>\n<strikethrough>are</strikethrough> well all the way to a telephone post to call someone. There are many",
+  "confidence": 0.78,
+  "uncertainty": [
+    {
+      "start": 69,
+      "end": 94,
+      "reason": "crossed-out text partly unclear"
+    },
+    {
+      "start": 95,
+      "end": 100,
+      "reason": "partial line fragment at crop edge"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_065e90ee864f23b3006a86a349383487d08ab6884760899146",
+    "usage": {
+      "input_tokens": 1259,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 123,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1382
+    }
+  }
+}

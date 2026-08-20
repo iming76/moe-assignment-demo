@@ -1,0 +1,20 @@
+{
+  "text": "QN2: What are the advantages and disadvantages of teens using social media in communicating with others",
+  "confidence": 0.97,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0ccadfcb4cf371a5006a86a3416e34819988e4821ea661172e",
+    "usage": {
+      "input_tokens": 1273,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 42,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1315
+    }
+  }
+}

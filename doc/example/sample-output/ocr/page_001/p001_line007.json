@@ -1,0 +1,42 @@
+{
+  "cropId": "p001_line007",
+  "text": "they can get in touch with long-distance friends as well. However, this might lead to",
+  "confidence": 0.95,
+  "model": "qwen/qwen3-vl-8b-instruct",
+  "processingTimeMs": 0,
+  "requestSchemaVersion": "vision-ocr-v1",
+  "cacheKey": "a74165d26573bd42ce11cdfcc1494f3994955e26ff3d4772c017822e0cf2e193",
+  "rawResponse": {
+    "confidence": 0.95,
+    "text": "they can get in touch with long-distance friends as well. However, this might lead to",
+    "uncertainty": [],
+    "_openrouter": {
+      "id": "gen-1787208010-RW6bFSPJTc6r6fCv6Bhr",
+      "usage": {
+        "prompt_tokens": 1321,
+        "completion_tokens": 43,
+        "total_tokens": 1364,
+        "cost": 0.000174122,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000174122,
+          "upstream_inference_prompt_cost": 0.000154557,
+          "upstream_inference_completions_cost": 1.9565e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  "validationState": "valid",
+  "reviewState": "pending"
+}

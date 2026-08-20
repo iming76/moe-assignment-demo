@@ -1,0 +1,20 @@
+{
+  "text": "get distracted as well.",
+  "confidence": 0.97,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0c916d3ca663e54d006a86a35254c081998f9e4ff0d1a9409e",
+    "usage": {
+      "input_tokens": 1158,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 28,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1186
+    }
+  }
+}

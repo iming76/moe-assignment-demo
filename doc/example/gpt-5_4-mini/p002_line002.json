@@ -1,0 +1,20 @@
+{
+  "text": "they can retrieve information on schoolwork from their friends if they are absent from",
+  "confidence": 0.97,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0c1caf338d80617e006a86a355386c87d0b327620a47ee30a8",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 39,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1257
+    }
+  }
+}

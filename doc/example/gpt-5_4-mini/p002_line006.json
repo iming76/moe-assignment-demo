@@ -1,0 +1,26 @@
+{
+  "text": "here not as advanced as they are nowadays. My mother used to tell me stories of how she had to walk <strikethrough>five</strikethrough> kilometers <strikethrough>to</strikethrough> from her house to the telephone post.",
+  "confidence": 0.9,
+  "uncertainty": [
+    {
+      "start": 100,
+      "end": 129,
+      "reason": "crossed-out insertion with overlapping marks"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_00724e27a84ed3d2006a86a35c0c5087d0a1684771d93c3f1d",
+    "usage": {
+      "input_tokens": 1273,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 105,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1378
+    }
+  }
+}

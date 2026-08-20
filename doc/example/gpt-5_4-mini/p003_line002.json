@@ -1,0 +1,41 @@
+{
+  "text": "With long distance friends. <strikethrough>##</strikethrough> Teens are <strikethrough>still</strikethrough> at a schooling age. This would mean that they <caret>might</caret> are facing many types of transitions, and farewells. They <strikethrough>should</strikethrough> be seperated from some of their closest friends. This is where social media comes in — <strikethrough>##</strikethrough> they allow students to text one another or even arrange <strikethrough>for</strikethrough> face-to-face meetings so that teens can <caret>follow</caret> up",
+  "confidence": 0.55,
+  "uncertainty": [
+    {
+      "start": 28,
+      "end": 50,
+      "reason": "cancellation partly unclear"
+    },
+    {
+      "start": 113,
+      "end": 120,
+      "reason": "caret insertion placement uncertain"
+    },
+    {
+      "start": 204,
+      "end": 226,
+      "reason": "struck-through word unclear"
+    },
+    {
+      "start": 320,
+      "end": 341,
+      "reason": "caret insertion at line end"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_00d07a159b0fce3b006a86a362ea7c81988d2fcde3a4819282",
+    "usage": {
+      "input_tokens": 1365,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 233,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1598
+    }
+  }
+}

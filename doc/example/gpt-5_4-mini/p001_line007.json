@@ -1,0 +1,20 @@
+{
+  "text": "they can get in touch with long-distance friends as well. However , this might lead to",
+  "confidence": 0.93,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_09c2891450896c0c006a86a34f5c5c8198a6e590e1d6bf5fa2",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 42,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1260
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "confidence": 0.95,
+  "text": "Another benefit of teens using social media to communicate is that they can get in-touch.",
+  "uncertainty": [],
+  "_openrouter": {
+    "id": "gen-1787208018-JGyAKqyqc6PxAVsfq1CE",
+    "usage": {
+      "prompt_tokens": 1323,
+      "completion_tokens": 42,
+      "total_tokens": 1365,
+      "cost": 0.000173901,
+      "is_byok": false,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0
+      },
+      "cost_details": {
+        "upstream_inference_cost": 0.000173901,
+        "upstream_inference_prompt_cost": 0.000154791,
+        "upstream_inference_completions_cost": 1.911e-05
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  }
+}

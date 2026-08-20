@@ -1,0 +1,31 @@
+{
+  "text": "school. Then they will not be missing out on homework, or any important information",
+  "confidence": 0.91,
+  "uncertainty": [
+    {
+      "start": 0,
+      "end": 6,
+      "reason": "first word faint/possibly capitalized"
+    },
+    {
+      "start": 16,
+      "end": 21,
+      "reason": "spacing around punctuation in manuscript"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_07eef05dcf3c650c006a86a357a1c887d0bf8c0e23762fccdd",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 75,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1293
+    }
+  }
+}

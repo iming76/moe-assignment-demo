@@ -1,0 +1,26 @@
+{
+  "text": "With others",
+  "confidence": 0.69,
+  "uncertainty": [
+    {
+      "start": 0,
+      "end": 4,
+      "reason": "capitalization and spacing uncertain"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_0de8e4b04fbf0e1f006a86a3437ccc81999d20c30a7a4ac79e",
+    "usage": {
+      "input_tokens": 1146,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 43,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1189
+    }
+  }
+}

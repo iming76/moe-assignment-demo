@@ -1,0 +1,42 @@
+{
+  "cropId": "p002_line009",
+  "text": "tool when used effectively.",
+  "confidence": 0.95,
+  "model": "qwen/qwen3-vl-8b-instruct",
+  "processingTimeMs": 0,
+  "requestSchemaVersion": "vision-ocr-v1",
+  "cacheKey": "2ffbe5752e44970426b22e9dd4e47778975316b522e5261ee21e38f8e90d7af9",
+  "rawResponse": {
+    "confidence": 0.95,
+    "text": "tool when used effectively.",
+    "uncertainty": [],
+    "_openrouter": {
+      "id": "gen-1787208018-M4fD0pP7ojlLKO3aIkmt",
+      "usage": {
+        "prompt_tokens": 1308,
+        "completion_tokens": 30,
+        "total_tokens": 1338,
+        "cost": 0.000166686,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000166686,
+          "upstream_inference_prompt_cost": 0.000153036,
+          "upstream_inference_completions_cost": 1.365e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  "validationState": "valid",
+  "reviewState": "pending"
+}

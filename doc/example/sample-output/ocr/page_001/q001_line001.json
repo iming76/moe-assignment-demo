@@ -1,0 +1,42 @@
+{
+  "cropId": "q001_line001",
+  "text": "Qn 2: What are the advantages and disadvantages of teens using social media in communicating,",
+  "confidence": 0.95,
+  "model": "qwen/qwen3-vl-8b-instruct",
+  "processingTimeMs": 0,
+  "requestSchemaVersion": "vision-ocr-v1",
+  "cacheKey": "f30fa43b62d079cf3ea94715aff79fe84c4f6b94532400da53d4d2aed4356695",
+  "rawResponse": {
+    "confidence": 0.95,
+    "text": "Qn 2: What are the advantages and disadvantages of teens using social media in communicating,",
+    "uncertainty": [],
+    "_openrouter": {
+      "id": "gen-1787208001-wliWfsqeSpoMMSi0rhrm",
+      "usage": {
+        "prompt_tokens": 1307,
+        "completion_tokens": 44,
+        "total_tokens": 1351,
+        "cost": 0.000172939,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000172939,
+          "upstream_inference_prompt_cost": 0.000152919,
+          "upstream_inference_completions_cost": 2.002e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  "validationState": "valid",
+  "reviewState": "pending"
+}

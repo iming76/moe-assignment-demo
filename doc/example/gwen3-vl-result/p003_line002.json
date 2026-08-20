@@ -1,0 +1,57 @@
+{
+  "confidence": 0.75,
+  "text": "with long distance friend. ## Teens are ### at a schooling age. This would mean that they are facing many types of transitions and forewells. # They might be seperated from some of their closest friends. This is where social media comes in - # they allow students to text one another or even arrange face-to-face meetings so that teens can catch up",
+  "uncertainty": [
+    {
+      "end": 38,
+      "reason": "ambiguous letter shape",
+      "start": 28
+    },
+    {
+      "end": 61,
+      "reason": "illegible cancellation",
+      "start": 51
+    },
+    {
+      "end": 74,
+      "reason": "ambiguous letter shape",
+      "start": 69
+    },
+    {
+      "end": 87,
+      "reason": "illegible cancellation",
+      "start": 82
+    },
+    {
+      "end": 104,
+      "reason": "illegible cancellation",
+      "start": 99
+    }
+  ],
+  "_openrouter": {
+    "id": "gen-1787208019-CnPmLKTIsnr1vgpw5DUB",
+    "usage": {
+      "prompt_tokens": 1423,
+      "completion_tokens": 248,
+      "total_tokens": 1671,
+      "cost": 0.000279331,
+      "is_byok": false,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0
+      },
+      "cost_details": {
+        "upstream_inference_cost": 0.000279331,
+        "upstream_inference_prompt_cost": 0.000166491,
+        "upstream_inference_completions_cost": 0.00011284
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  }
+}

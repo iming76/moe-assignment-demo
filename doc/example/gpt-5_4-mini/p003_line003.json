@@ -1,0 +1,31 @@
+{
+  "text": "on their friendships. For example, I had a <strikethrough>far</strikethrough> close friends that <strikethrough>moved</strikethrough> migrated to China",
+  "confidence": 0.91,
+  "uncertainty": [
+    {
+      "start": 44,
+      "end": 71,
+      "reason": "struck word partially unclear"
+    },
+    {
+      "start": 96,
+      "end": 121,
+      "reason": "struck word partially unclear"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_0ebc4b271b2dba31006a86a3650cec87d0b0f89533c67bde18",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 100,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1318
+    }
+  }
+}

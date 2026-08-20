@@ -1,0 +1,20 @@
+{
+  "text": "<strikethrough>one- one-</strikethrough> walk all the way to a telephone post to call someone. There are many",
+  "confidence": 0.94,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_041379927ca0fab9006a86a34ade40819a880b213e3a33ca90",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 61,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1279
+    }
+  }
+}

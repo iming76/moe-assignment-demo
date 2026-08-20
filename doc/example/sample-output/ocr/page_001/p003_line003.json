@@ -1,0 +1,86 @@
+{
+  "cropId": "p003_line003",
+  "text": "on their friendships. For example, I had a. ^ close friends that moved migrated to China",
+  "confidence": 0.85,
+  "model": "qwen/qwen3-vl-8b-instruct",
+  "processingTimeMs": 0,
+  "requestSchemaVersion": "vision-ocr-v1",
+  "cacheKey": "e09efdf3357b253911777b6a4362393cb83c7043990a8680c79a85d5633b39df",
+  "rawResponse": {
+    "text": "on their friendships. For example, I had a. ^ close friends that moved migrated to China",
+    "confidence": 0.85,
+    "uncertainty": [
+      {
+        "start": 17,
+        "end": 21,
+        "reason": "ambiguous letter shape, possibly 'had'"
+      },
+      {
+        "start": 26,
+        "end": 30,
+        "reason": "illegible cancellation"
+      },
+      {
+        "start": 31,
+        "end": 37,
+        "reason": "ambiguous letter shape, possibly 'moved'"
+      },
+      {
+        "start": 38,
+        "end": 45,
+        "reason": "ambiguous letter shape, possibly 'migrated'"
+      }
+    ],
+    "_openrouter": {
+      "id": "gen-1787208021-MW6aDRZ9NNXG2K4ujFYO",
+      "usage": {
+        "prompt_tokens": 1154,
+        "completion_tokens": 176,
+        "total_tokens": 1330,
+        "cost": 0.0004205,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0004205,
+          "upstream_inference_prompt_cost": 0.0002885,
+          "upstream_inference_completions_cost": 0.000132
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  "uncertainty": [
+    {
+      "start": 17,
+      "end": 21,
+      "reason": "ambiguous letter shape, possibly 'had'"
+    },
+    {
+      "start": 26,
+      "end": 30,
+      "reason": "illegible cancellation"
+    },
+    {
+      "start": 31,
+      "end": 37,
+      "reason": "ambiguous letter shape, possibly 'moved'"
+    },
+    {
+      "start": 38,
+      "end": 45,
+      "reason": "ambiguous letter shape, possibly 'migrated'"
+    }
+  ],
+  "validationState": "valid",
+  "reviewState": "required",
+  "reviewRequiredReason": "model_uncertainty"
+}

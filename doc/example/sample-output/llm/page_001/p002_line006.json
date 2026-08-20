@@ -1,0 +1,37 @@
+{
+  "confidence": 0.9,
+  "text": "We're not as advanced as they are nowadays. My mother used to tell me stories of how she had to walk <strikethrough>five</strikethrough> kilometers to from her house to the telephone post.",
+  "uncertainty": [
+    {
+      "end": 38,
+      "reason": "illegible cancellation",
+      "start": 34
+    }
+  ],
+  "_openrouter": {
+    "id": "gen-1787208015-bmbwVsGtEbjZrfSThmva",
+    "usage": {
+      "prompt_tokens": 1307,
+      "completion_tokens": 101,
+      "total_tokens": 1408,
+      "cost": 0.000198874,
+      "is_byok": false,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0
+      },
+      "cost_details": {
+        "upstream_inference_cost": 0.000198874,
+        "upstream_inference_prompt_cost": 0.000152919,
+        "upstream_inference_completions_cost": 4.5955e-05
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  }
+}

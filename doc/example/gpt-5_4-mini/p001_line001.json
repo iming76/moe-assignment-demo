@@ -1,0 +1,26 @@
+{
+  "text": "Imagine a world where teens do not know how to communicate face-to-face —",
+  "confidence": 0.93,
+  "uncertainty": [
+    {
+      "start": 71,
+      "end": 72,
+      "reason": "end punctuation partially cut off"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_071004e402e61581006a86a3462b58819bb87b3d3895ac3e87",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 56,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1274
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "text": "Tool when used effectively.",
+  "confidence": 0.98,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0c588ab6d2ca6264006a86a360485881999e457faccc716414",
+    "usage": {
+      "input_tokens": 1163,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 28,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1191
+    }
+  }
+}

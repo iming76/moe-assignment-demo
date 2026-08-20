@@ -1,0 +1,31 @@
+{
+  "text": "how would it be like? As social media gets more advanced, more and more people start <caret>allows people</caret>\nto use it, especially teens. Social media is a platform that <strikethrough>trees</strikethrough> use to communicat",
+  "confidence": 0.61,
+  "uncertainty": [
+    {
+      "start": 85,
+      "end": 102,
+      "reason": "caret insertion placement slightly ambiguous"
+    },
+    {
+      "start": 155,
+      "end": 161,
+      "reason": "partially cut off word at right edge"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_0774bfd76f06f4c1006a86a347a29087d0aea60ff88fa1fddc",
+    "usage": {
+      "input_tokens": 1263,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 117,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1380
+    }
+  }
+}

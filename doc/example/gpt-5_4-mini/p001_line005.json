@@ -1,0 +1,26 @@
+{
+  "text": "advantages and disadvantages To teens using social media to communicate. Teens can",
+  "confidence": 0.71,
+  "uncertainty": [
+    {
+      "start": 0,
+      "end": 82,
+      "reason": "partial line fragment, crop edge context limited"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_0f1ec6742cc2ffd2006a86a34c626c87d09086a25fb5174977",
+    "usage": {
+      "input_tokens": 1221,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 57,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1278
+    }
+  }
+}

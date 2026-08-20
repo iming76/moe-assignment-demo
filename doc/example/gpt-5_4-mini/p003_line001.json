@@ -1,0 +1,20 @@
+{
+  "text": "Another benefit of teens using social media to communicate is that they can get in-touch",
+  "confidence": 0.98,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0c12d757eacb0428006a86a361858081988e39864b92aa5f6a",
+    "usage": {
+      "input_tokens": 1218,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 40,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1258
+    }
+  }
+}

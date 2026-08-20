@@ -1,0 +1,20 @@
+{
+  "text": "One major advantage as teenagers using social media to communicate with others is that",
+  "confidence": 0.98,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0cb54662b648b9da006a86a353f98487d082dfa432969bb1d2",
+    "usage": {
+      "input_tokens": 1230,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 44,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1274
+    }
+  }
+}

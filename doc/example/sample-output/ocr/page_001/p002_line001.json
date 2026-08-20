@@ -1,0 +1,42 @@
+{
+  "cropId": "p002_line001",
+  "text": "One major advantage as teenagers using social media to communicate with others is that",
+  "confidence": 0.95,
+  "model": "qwen/qwen3-vl-8b-instruct",
+  "processingTimeMs": 0,
+  "requestSchemaVersion": "vision-ocr-v1",
+  "cacheKey": "af21994bf9c10995779390e912cd026c846e0c7469fe894fc221ec504757df4a",
+  "rawResponse": {
+    "confidence": 0.95,
+    "text": "One major advantage as teenagers using social media to communicate with others is that",
+    "uncertainty": [],
+    "_openrouter": {
+      "id": "gen-1787208011-vLpwRYJumOzqOebEG2bI",
+      "usage": {
+        "prompt_tokens": 1331,
+        "completion_tokens": 40,
+        "total_tokens": 1371,
+        "cost": 0.000173927,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000173927,
+          "upstream_inference_prompt_cost": 0.000155727,
+          "upstream_inference_completions_cost": 1.82e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  "validationState": "valid",
+  "reviewState": "pending"
+}

@@ -1,0 +1,36 @@
+{
+  "text": "All this <strikethrough>just</strikethrough> fuss # just to be able to of call and ask her classmate a simple in seconds question. However, nowadays, students can easily send a text message ^to their classmates through social media platforms like Whatsapp, WeChat, Telegram and more. This use of",
+  "confidence": 0.58,
+  "uncertainty": [
+    {
+      "start": 9,
+      "end": 30,
+      "reason": "crossed-out word unclear"
+    },
+    {
+      "start": 55,
+      "end": 57,
+      "reason": "unclear symbol/word"
+    },
+    {
+      "start": 131,
+      "end": 137,
+      "reason": "caret insertion position"
+    }
+  ],
+  "_openai": {
+    "responseId": "resp_09fa1a91b55ca88e006a86a35d79b487d09177523b039f1ccd",
+    "usage": {
+      "input_tokens": 1319,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 138,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1457
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "text": "social media platforms enables students To follow up on schoolwork, making it a valuable",
+  "confidence": 0.97,
+  "uncertainty": [],
+  "_openai": {
+    "responseId": "resp_0c1575e9e53d7470006a86a35f1834819a8c54c423210b345b",
+    "usage": {
+      "input_tokens": 1216,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 40,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 1256
+    }
+  }
+}
