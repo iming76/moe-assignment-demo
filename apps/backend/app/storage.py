@@ -8,7 +8,7 @@ Spec Section 37 directory structure:
     ├── processed/<page>/
     ├── crops/<page>/<type>/
     ├── ocr/<page>/
-    └── output/
+    └── output/          (created on demand at export time)
 
 All paths recorded in metadata are relative to the storage root so documents
 stay portable. The filesystem is the POC database.
@@ -29,7 +29,7 @@ CROP_TYPE_DIRS = {
     "word": "words",
 }
 
-TOP_LEVEL_DIRS = ("originals", "rendered", "processed", "crops", "ocr", "output")
+TOP_LEVEL_DIRS = ("originals", "rendered", "processed", "crops", "ocr")
 
 
 def page_dir_name(page_number: int) -> str:
@@ -97,7 +97,7 @@ class StorageLayout:
     # -- creation -------------------------------------------------------------
 
     def ensure_all(self) -> None:
-        """Create the full tree: top-level + output dirs.
+        """Create the top-level tree (output/ is created on demand at export time).
 
         Per-page dirs are created on demand via ensure_page().
         """
@@ -111,7 +111,6 @@ class StorageLayout:
         for crop_type in CROP_TYPE_DIRS:
             self.crops_type(page_number, crop_type).mkdir(parents=True, exist_ok=True)
         self.ocr_page(page_number).mkdir(parents=True, exist_ok=True)
-        self.output.mkdir(parents=True, exist_ok=True)
 
     # -- portable relative paths ----------------------------------------------
 
