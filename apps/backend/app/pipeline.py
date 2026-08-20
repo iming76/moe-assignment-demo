@@ -6,11 +6,11 @@ from pathlib import Path
 import cv2
 
 from .config import CONFIG
-from .imaging.crop_generator import generate_crops
 from .detect.answers import answer_line_regions, detect_answer
 from .detect.highlights import detect_highlights
 from .detect.paragraphs import detect_paragraphs
 from .detect.questions import detect_questions
+from .imaging.crop_generator import generate_crops
 from .imaging.normalize_image import preprocess_page
 from .imaging.opencv_analysis import (
     ruled_line_bands,
@@ -18,8 +18,8 @@ from .imaging.opencv_analysis import (
 )
 from .ingest.pages import ingest_document
 from .ocr.reconstruct import reconstruct_document
-from .review import enter_review
 from .ocr.vision_llm import VisionLLMClient, persist_ocr
+from .review import enter_review
 from .schemas import Document
 from .state_machine import transition
 from .storage import StorageLayout
