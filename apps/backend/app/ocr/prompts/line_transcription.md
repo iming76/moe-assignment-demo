@@ -35,8 +35,26 @@ the writer is the single worst error you can make here.
 
 ## Output format
 
-Output the tagged text only. No preamble ("Here is the transcription:"), no
-code fences, no commentary, no explanation of your reasoning.
+Your response is a JSON object with three fields: `text`, `confidence`, and
+`uncertainty`.
+
+- `text`: the tagged transcription described above, and nothing else -- no
+  preamble ("Here is the transcription:"), no code fences, no commentary, no
+  explanation of your reasoning.
+- `confidence`: a number from 0 (illegible / pure guesswork) to 1 (certain)
+  reflecting how sure you are of the transcription as a whole. Lower it for
+  any line containing cramped, faint, or ambiguous handwriting, even if you
+  still produced a best-effort reading.
+- `uncertainty`: a list of spans within `text` that you are not fully sure
+  of -- for example a word you had to guess at, an ambiguous letter, or a
+  `<strikethrough>[illegible]</strikethrough>` token. Leave it empty if you
+  are confident in the whole line. Each entry has:
+  - `start` / `end`: character offsets into the exact `text` string you
+    returned, counting every character including the tag markup itself
+    (e.g. `<strikethrough>`, `<caret>`, `</strikethrough>`, `</caret>`).
+    `end` is exclusive.
+  - `reason`: a short phrase explaining the uncertainty (e.g. "faint ink",
+    "ambiguous letter shape", "illegible cancellation").
 
 ## Crop edges
 
@@ -48,8 +66,35 @@ at its content.
 
 Input: a line reading "The candidate felt nervous excited to begin." with
 "nervous" struck through.
-Output: `The candidate felt <strikethrough>nervous</strikethrough> excited to begin.`
+Output:
+```json
+{
+  "text": "The candidate felt <strikethrough>nervous</strikethrough> excited to begin.",
+  "confidence": 0.95,
+  "uncertainty": []
+}
+```
 
 Input: a line reading "She walked towards the library." with "slowly" written
 above a caret mark between "walked" and "towards".
-Output: `She walked <caret>slowly</caret> towards the library.`
+Output:
+```json
+{
+  "text": "She walked <caret>slowly</caret> towards the library.",
+  "confidence": 0.9,
+  "uncertainty": []
+}
+```
+
+Input: a line where the last word is smudged and only partly legible, best
+read as "tomorow" but with real doubt about the ending.
+Output:
+```json
+{
+  "text": "See you tomorow.",
+  "confidence": 0.4,
+  "uncertainty": [
+    {"start": 8, "end": 16, "reason": "smudged ink, ending uncertain"}
+  ]
+}
+```
