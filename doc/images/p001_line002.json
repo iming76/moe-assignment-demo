@@ -1,0 +1,29 @@
+{
+  "cropId": "p001_line002",
+  "text": "# how would it be like ? As social media gets more advanced , there gave people start",
+  "confidence": 0.9903,
+  "model": "microsoft/trocr-base-handwritten",
+  "candidates": [
+    {
+      "text": "# how would it be like ? As social media gets more advanced , there gave people start",
+      "confidence": 0.9903
+    },
+    {
+      "text": "\" how would it be like ? As social media gets more advanced , there gave people start",
+      "confidence": 0.9902
+    },
+    {
+      "text": "\" How would it be like ? As social media gets more advanced , there gave people start",
+      "confidence": 0.9896
+    },
+    {
+      "text": "\" how would it be like ! As social media gets more advanced , there gave people start",
+      "confidence": 0.9882
+    },
+    {
+      "text": "\" how would it be like ? As social media gets more advanced , more gone people start",
+      "confidence": 0.985
+    }
+  ],
+  "processingTimeMs": 3317
+}

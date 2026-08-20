@@ -1,0 +1,29 @@
+{
+  "cropId": "p001_line003",
+  "text": "to use its especially teens . Social media is a platform that # to communicate",
+  "confidence": 0.9951,
+  "model": "microsoft/trocr-base-handwritten",
+  "candidates": [
+    {
+      "text": "to use its especially teens . Social media is a platform that # to communicate",
+      "confidence": 0.9951
+    },
+    {
+      "text": "to use its especially teens . Social media is a platform that # to communicates",
+      "confidence": 0.9915
+    },
+    {
+      "text": "to use its especially teens . Social media is a platform that # to communicate to",
+      "confidence": 0.9888
+    },
+    {
+      "text": "Ito use its especially teens . Social media is a platform that # to communicate",
+      "confidence": 0.984
+    },
+    {
+      "text": "to use its especially teens . Social media is a platform that # to communicates to",
+      "confidence": 0.983
+    }
+  ],
+  "processingTimeMs": 2922
+}
