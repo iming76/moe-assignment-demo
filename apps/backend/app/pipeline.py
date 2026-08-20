@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import cv2
@@ -25,6 +26,11 @@ from .state_machine import transition
 from .storage import StorageLayout
 
 
+# UI toggle value → vision_llm.provider. "llm" keeps the configured default
+# (OpenAI); "ocr" switches to local PaddleOCR recognition for this document.
+ENGINE_PROVIDERS = {"llm": "openai", "ocr": "paddleocr"}
+
+
 def _imread(path: Path, flags: int = cv2.IMREAD_COLOR):
     image = cv2.imread(str(path), flags)
     if image is None:
@@ -36,18 +42,28 @@ def process_document(
     source_path: Path,
     document_id: str,
     root: str | None = None,
+    engine: str = "llm",
     on_state_change: Callable[[str], None] | None = None,
     on_ocr_progress: Callable[[int, int], None] | None = None,
 ) -> Document:
     """Run the full pipeline to REVIEW_REQUIRED and return the document.
 
+    ``engine`` selects the line-transcription backend for this document:
+    "llm" (default) uses the configured vision LLM (OpenAI); "ocr" uses
+    local PaddleOCR instead. See ``ENGINE_PROVIDERS``.
     ``on_state_change`` is invoked with the new state string after every
     transition, letting callers (e.g. an SSE endpoint) stream stage progress.
     ``on_ocr_progress`` is invoked with (completed, total) after each crop is
     transcribed during OCR_PROCESSING, the pipeline's slowest stage.
     """
     layout = StorageLayout(document_id, root=root)
-    vision = VisionLLMClient(CONFIG.vision_llm, cache_dir=layout.doc_root / "ocr" / "vision_cache")
+    provider_name = ENGINE_PROVIDERS.get(engine, ENGINE_PROVIDERS["llm"])
+    vision_config = replace(CONFIG.vision_llm, provider=provider_name)
+    vision = VisionLLMClient(
+        vision_config,
+        cache_dir=layout.doc_root / "ocr" / "vision_cache",
+        layout=layout,
+    )
 
     def advance(current: str, next_state: str) -> str:
         state = transition(current, next_state)

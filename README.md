@@ -1,4 +1,4 @@
-# moe-assignment-demo — Handwritten Student Script OCR & Reconstruction
+# Handwritten Student Script OCR & Reconstruction
 
 A proof-of-concept pipeline that transcribes **handwritten student scripts** (PDF or
 image) into structured, reviewable OCR output — preserving the original visual
@@ -34,6 +34,9 @@ REST API (state machine: UPLOADED → … → MARKUP_RECONSTRUCTION → REVIEW_R
       ▼
 apps/frontend (Next.js review frontend)
 ```
+
+See [API overview](#api-overview) for the REST endpoints and full state
+machine transitions.
 
 ### Backend (`apps/backend/`)
 

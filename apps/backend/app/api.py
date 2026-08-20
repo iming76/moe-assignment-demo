@@ -18,12 +18,12 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from .config import CONFIG
-from .pipeline import process_document
+from .pipeline import ENGINE_PROVIDERS, process_document
 from .schemas import Document
 from .storage import StorageLayout
 
@@ -65,7 +65,12 @@ def _next_document_id() -> str:
 
 
 @app.post("/documents")
-async def upload_document(file: UploadFile) -> dict:
+async def upload_document(file: UploadFile, engine: str = Form("llm")) -> dict:
+    if engine not in ENGINE_PROVIDERS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown engine {engine!r}; expected one of {sorted(ENGINE_PROVIDERS)}",
+        )
     suffix = Path(file.filename or "upload").suffix.lower()
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         shutil.copyfileobj(file.file, tmp)
@@ -90,6 +95,7 @@ async def upload_document(file: UploadFile) -> dict:
             document = process_document(
                 tmp_path,
                 document_id,
+                engine=engine,
                 on_state_change=on_state_change,
                 on_ocr_progress=on_ocr_progress,
             )

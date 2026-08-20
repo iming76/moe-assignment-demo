@@ -8,6 +8,7 @@ import time
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -48,10 +49,14 @@ class VisionLLMClient:
     cache: dict[str, dict[str, Any]] = field(default_factory=dict)
     budgets: dict[int, PageRequestBudget] = field(default_factory=dict)
     cache_dir: Path | None = None
+    layout: StorageLayout | None = None
 
     def __post_init__(self) -> None:
-        if self.provider is None and self.config.provider == "openai":
-            self.provider = self._openai_provider
+        if self.provider is None:
+            if self.config.provider == "openai":
+                self.provider = self._openai_provider
+            elif self.config.provider == "paddleocr":
+                self.provider = self._paddleocr_provider
 
     def transcribe_line(
         self, crop_path: Path, crop_id: str, page_number: int
@@ -72,7 +77,7 @@ class VisionLLMClient:
         }
         image = crop_path.read_bytes()
         key = make_cache_key(image, request)
-        raw, reason = self._request(request, image, key, page_number)
+        raw, reason = self._request(request, image, key, page_number, crop_id)
         if raw is None:
             return OCRResult(
                 cropId=crop_id,
@@ -90,7 +95,12 @@ class VisionLLMClient:
         )
 
     def _request(
-        self, request: dict[str, Any], image: bytes, key: str, page_number: int
+        self,
+        request: dict[str, Any],
+        image: bytes,
+        key: str,
+        page_number: int,
+        crop_id: str,
     ) -> tuple[dict[str, Any] | None, str | None]:
         if self.config.cache and key in self.cache:
             return self.cache[key], None
@@ -113,6 +123,8 @@ class VisionLLMClient:
             Exception
         ) as exc:  # provider errors must escalate, not abort the document
             return None, f"provider_failure:{type(exc).__name__}"
+        if self.layout is not None:
+            persist_llm_response(self.layout, page_number, crop_id, raw)
         if self.config.cache:
             self.cache[key] = raw
             if cache_path is not None:
@@ -173,6 +185,56 @@ class VisionLLMClient:
         return parsed
 
 
+    def _paddleocr_provider(self, request: dict[str, Any], image: bytes) -> dict[str, Any]:
+        import cv2
+        import numpy as np
+
+        engine = _get_paddle_ocr(self.config.paddle_lang)
+        array = np.frombuffer(image, dtype=np.uint8)
+        crop = cv2.imdecode(array, cv2.IMREAD_COLOR)
+        if crop is None:
+            raise ValueError("PaddleOCR received an undecodable image")
+        # Crops are already single lines, so recognition only (no detection).
+        result = engine.ocr(crop, det=False, cls=False)
+        if not result or not result[0]:
+            text, confidence = "", 0.0
+        else:
+            text, confidence = result[0][0]
+        return {
+            "text": text,
+            "confidence": float(confidence),
+            "uncertainty": [],
+            "_paddleocr": {"lang": self.config.paddle_lang},
+        }
+
+
+@lru_cache(maxsize=None)
+def _get_paddle_ocr(lang: str):
+    """One PaddleOCR engine per language, reused across crops (model load is slow)."""
+    _patch_numpy_sctypes()
+    from paddleocr import PaddleOCR
+
+    return PaddleOCR(use_angle_cls=True, lang=lang, show_log=False)
+
+
+def _patch_numpy_sctypes() -> None:
+    """paddleocr's imgaug dependency reads the ``numpy.sctypes`` dict that
+    numpy 2.0 removed; the project otherwise depends on numpy>=2 (opencv-python
+    5.x requires it). Restore just enough of the old attribute for imgaug's
+    import-time lookup to succeed."""
+    import numpy as np
+
+    if hasattr(np, "sctypes"):
+        return
+    np.sctypes = {  # type: ignore[attr-defined]
+        "int": [np.int8, np.int16, np.int32, np.int64],
+        "uint": [np.uint8, np.uint16, np.uint32, np.uint64],
+        "float": [np.float16, np.float32, np.float64],
+        "complex": [np.complex64, np.complex128],
+        "others": [bool, object, bytes, str, np.void],
+    }
+
+
 def _response_output_text(response: dict[str, Any]) -> str:
     for item in response.get("output", []):
         if not isinstance(item, dict) or item.get("type") != "message":
@@ -218,6 +280,16 @@ def persist_ocr(layout: StorageLayout, page_number: int, result: OCRResult) -> P
         json.dumps(result.to_json(), indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    return path
+
+
+def persist_llm_response(
+    layout: StorageLayout, page_number: int, crop_id: str, raw: dict[str, Any]
+) -> Path:
+    """Persist one raw LLM response as ``llm/<page>/<cropId>.json``."""
+    path = layout.llm_json_path(page_number, crop_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(raw, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 
 

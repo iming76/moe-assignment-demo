@@ -8,6 +8,7 @@ Spec Section 37 directory structure:
     ├── processed/<page>/
     ├── crops/<page>/<type>/
     ├── ocr/<page>/
+    ├── llm/<page>/       (one JSON per raw LLM response)
     └── output/          (created on demand at export time)
 
 All paths recorded in metadata are relative to the storage root so documents
@@ -29,7 +30,7 @@ CROP_TYPE_DIRS = {
     "word": "words",
 }
 
-TOP_LEVEL_DIRS = ("originals", "rendered", "processed", "crops", "ocr")
+TOP_LEVEL_DIRS = ("originals", "rendered", "processed", "crops", "ocr", "llm")
 
 
 def page_dir_name(page_number: int) -> str:
@@ -77,6 +78,9 @@ class StorageLayout:
     def ocr_page(self, page_number: int) -> Path:
         return self.doc_root / "ocr" / page_dir_name(page_number)
 
+    def llm_page(self, page_number: int) -> Path:
+        return self.doc_root / "llm" / page_dir_name(page_number)
+
     # -- standard artifact paths ---------------------------------------------
 
     def original_path(self, filename: str) -> Path:
@@ -90,6 +94,9 @@ class StorageLayout:
 
     def ocr_json_path(self, page_number: int, unit_id: str) -> Path:
         return self.ocr_page(page_number) / f"{unit_id}.json"
+
+    def llm_json_path(self, page_number: int, unit_id: str) -> Path:
+        return self.llm_page(page_number) / f"{unit_id}.json"
 
     def output_json_path(self) -> Path:
         return self.output / "document.json"
@@ -111,6 +118,7 @@ class StorageLayout:
         for crop_type in CROP_TYPE_DIRS:
             self.crops_type(page_number, crop_type).mkdir(parents=True, exist_ok=True)
         self.ocr_page(page_number).mkdir(parents=True, exist_ok=True)
+        self.llm_page(page_number).mkdir(parents=True, exist_ok=True)
 
     # -- portable relative paths ----------------------------------------------
 

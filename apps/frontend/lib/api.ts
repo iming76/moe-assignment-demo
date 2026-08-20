@@ -3,12 +3,18 @@ import type { Document } from "./types";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
-export async function uploadDocument(file: File): Promise<{
+export type OcrEngine = "llm" | "ocr";
+
+export async function uploadDocument(
+  file: File,
+  engine: OcrEngine = "llm"
+): Promise<{
   documentId: string;
   state: string;
 }> {
   const form = new FormData();
   form.append("file", file);
+  form.append("engine", engine);
   const res = await fetch(`${API_BASE}/documents`, {
     method: "POST",
     body: form,
