@@ -1,4 +1,4 @@
-# Handwritten Student Script OCR & Reconstruction
+# Handwritten OCR & Reconstruction
 
 A proof-of-concept pipeline that transcribes **handwritten student scripts** (PDF or
 image) into structured, reviewable OCR output — preserving the original visual
