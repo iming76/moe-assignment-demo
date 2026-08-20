@@ -5,10 +5,6 @@ image) into structured, reviewable OCR output — preserving the original visual
 evidence: line crops, highlights, spelling errors, punctuation, and paragraph
 structure.
 
-This is a **POC**: no auth, no hardening, optimized for readability and
-iteration speed. The full technical specification lives at `.resource/specs.md`
-(v1.0), with capability specs under `openspec/specs/`.
-
 ## Core principle
 
 **Transcription fidelity over contextual correctness.** The system never
@@ -55,7 +51,7 @@ thresholds/weights live in `app/config.py` + `app/config.yaml`. See
 | Line/word segmentation helpers | `app/imaging/opencv_analysis.py` |
 | Highlight detection | `app/detect/highlights.py` |
 | Persist all crops + metadata before OCR | `app/imaging/crop_generator.py` |
-| OpenAI Vision over line crops (literal structured results) | `app/ocr/vision_llm.py` |
+| Vision LLM over line crops (literal structured results) | `app/ocr/vision_llm.py`, `app/ocr/providers/` |
 | Line OCR → final JSON | `app/ocr/reconstruct.py` |
 | Review state machine / low-confidence flagging | `app/state_machine.py`, `app/review.py` |
 | FastAPI endpoints | `app/api.py` |
@@ -104,7 +100,7 @@ pnpm run dev                    # runs dev in every workspace package (frontend 
 Other root scripts: `pnpm run build`, `pnpm run lint`, `pnpm run check-types`,
 `pnpm run test`.
 
-### Try it
+### Testing the pipeline
 
 Upload a script (PDF or image) through the web UI (`http://localhost:3000`),
 or hit the API directly:
@@ -115,6 +111,31 @@ curl -F "file=@/path/to/script.pdf" http://localhost:8000/documents
 
 The upload runs the full pipeline to `REVIEW_REQUIRED`, then the review UI is
 used to inspect crops and OCR results.
+
+## Storage
+
+Every retained artifact lives on disk under a per-document directory,
+functioning as an append-only log of the pipeline's work, laid out by
+`apps/backend/app/storage.py`:
+
+```
+storage/<documentId>/
+├── originals/       uploaded PDF/image, unmodified
+├── rendered/         page_NNN.png — one rendered page per PDF page
+├── processed/<page>/ normalized/preprocessed page image
+├── crops/<page>/      question/ answer/ paragraph/ line/ word/ — immutable line crops
+├── ocr/<page>/        final OCR JSON per unit
+├── llm/<page>/         one raw LLM response JSON per unit (unedited provenance)
+└── output/            document.json — created on demand at export time
+```
+
+Crops are immutable once written (`write_crop` refuses to overwrite), so
+reprocessing a document reuses prior crop paths rather than replacing them.
+All paths are stored relative to the document root so the storage tree stays
+portable. Any artifact above is retrievable by clients via
+`GET /documents/{id}/artifacts/{path}` (see [API overview](#api-overview)),
+which is how the review frontend fetches original scans, crops, and OCR/LLM
+JSON for display.
 
 ## API overview
 
@@ -135,22 +156,64 @@ PARAGRAPHS_DETECTED → CROPS_GENERATED → OCR_PROCESSING →
 MARKUP_RECONSTRUCTION → REVIEW_REQUIRED
 ```
 
-## Configuration
+## OCR Configuration
 
 All pipeline thresholds, weights, and epsilons live in
-`apps/backend/app/config.yaml` (named defaults in `apps/backend/app/config.py`):
-paragraph boundary scoring, question grouping, answer trimming, highlight HSV
-window, OCR decoding, confidence routing (≥ 0.90 accepted, 0.70–0.89 review
-recommended, < 0.70 review required), preprocessing, and segmentation.
-Storage root and ingestion DPI are also configured there.
+`apps/backend/app/config.yaml`, which overrides the named defaults in
+`apps/backend/app/config.py`; missing keys fall back to those defaults.
 
-Vision LLM transcription uses OpenAI (`provider: openai`,
-`model: gpt-5.4-mini`) through the Responses API. Copy
-`apps/backend/.env.example` to `apps/backend/.env` and set `OPENAI_API_KEY`.
-A repository-root `.env` is also supported; the backend loads either location
-automatically. Reprocessing must reuse the already persisted immutable crop
-paths; crop writes intentionally refuse overwrites. Prior crops and OCR
-provenance remain available for review.
+| Section | Purpose |
+| --- | --- |
+| `paragraph` | Weights (vertical gap / indentation / density), gap multiple, and score threshold used to detect paragraph boundaries |
+| `question` | Header height factor, max gap, and short-line ratio used to group question lines |
+| `answer` | Trim density ratio, margin scribble distance, and min ink area used to detect answer regions |
+| `highlight` | Yellow HSV window (hue/sat/val min-max), cleanup size, and min area used to detect highlights |
+| `confidence` | Review routing thresholds: ≥ 0.90 accepted, 0.70–0.89 review recommended, < 0.70 review required |
+| `vision_llm` | OCR provider/model/endpoint, API key env var, max calls per page, and response caching |
+| `storage` | Storage root directory for persisted artifacts |
+| `ingestion` | DPI used when rendering PDF pages to images |
+| `preprocess` | Denoising, CLAHE, deskew, adaptive threshold, and morphology settings for image normalization |
+| `segment` | Rule/margin kernel sizes and ink/gap tolerances used for line and word segmentation |
+
+Reprocessing must reuse the already persisted immutable crop paths; crop
+writes intentionally refuse overwrites. Prior crops and OCR provenance
+remain available for review.
+
+## Vision LLM
+
+Line transcription is provider-swappable, configured under `vision_llm` in
+`apps/backend/app/config.yaml`. Set `provider` to `openai` or `openrouter`;
+`apps/backend/app/config.yaml` has commented example blocks for each. Copy
+`apps/backend/.env.example` to `apps/backend/.env` and set the API key env
+var for whichever provider you choose. A repository-root `.env` is also
+supported; the backend loads either location automatically.
+
+Models tested: `gpt-5.4-mini` (OpenAI) and `qwen/qwen3-vl-8b-instruct`
+(OpenRouter).
+
+| Setting | Purpose |
+| --- | --- |
+| `provider` | `openai` \| `openrouter` — dispatches to the matching module in `app/ocr/providers/` |
+| `model` | Vision model used for line OCR (provider-specific slug) |
+| `endpoint` | API endpoint for the selected provider |
+| `api_key_env` | Env var name holding that provider's API key |
+| `max_calls_per_page` | Cap on Vision API calls per page |
+| `cache` | Whether raw LLM responses are cached/reused |
+
+
+
+### Logging
+
+Every outgoing request and incoming response for both providers is
+logged by `app/ocr/providers/_shared.py:post_json` (image bytes and any
+string over 300 chars are truncated before logging, so API keys and image
+payloads never hit disk in full). Logs are written to
+`apps/backend/logs/llm.log` (LLM traffic only, rotates at 10MB × 5 files)
+and also to `apps/backend/logs/app.log` (all app logging) plus the console.
+HTTP errors log the provider's actual response body — previously these were
+swallowed into a bare `provider_failure:HTTPError` reason with no way to see
+why a call failed; the full body and exception now reach `logs/llm.log`.
+`logs/` is gitignored.
 
 Provider evaluation metrics (cost, latency, uncertainty rate, and reviewer
 acceptance) must be recorded after an operator selects a provider/model and
