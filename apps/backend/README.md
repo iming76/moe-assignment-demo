@@ -10,7 +10,7 @@ live in `app/config.py` + `app/config.yaml`.
     app/
       api.py                FastAPI endpoints (`uv run uvicorn app.api:app`)
       pipeline.py            orchestrator + state machine advancement
-      review.py              manual correction workflow
+      review.py              review-required flagging + confidence classification
       state_machine.py       document state transitions
       config.py / config.yaml  thresholds/weights
       schemas.py              shared data structures

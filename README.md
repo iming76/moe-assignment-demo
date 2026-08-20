@@ -29,7 +29,7 @@ apps/backend/ (Python: OpenCV + OpenAI Vision LLM + FastAPI)
         → reconstruct JSON from lines
       │
       ▼
-REST API (state machine: UPLOADED → … → REVIEW_REQUIRED → APPROVED → EXPORTED)
+REST API (state machine: UPLOADED → … → MARKUP_RECONSTRUCTION → REVIEW_REQUIRED)
       │
       ▼
 apps/frontend (Next.js review frontend)
@@ -54,15 +54,15 @@ thresholds/weights live in `app/config.py` + `app/config.yaml`. See
 | Persist all crops + metadata before OCR | `app/imaging/crop_generator.py` |
 | OpenAI Vision over line crops (literal structured results) | `app/ocr/vision_llm.py` |
 | Line OCR → final JSON | `app/ocr/reconstruct.py` |
-| Review state machine / corrections / export | `app/state_machine.py`, `app/review.py` |
+| Review state machine / low-confidence flagging | `app/state_machine.py`, `app/review.py` |
 | FastAPI endpoints | `app/api.py` |
 | Artifact storage layout | `app/storage.py` |
 
 ### Frontend (`apps/frontend`)
 
 Next.js 15 / React 19 review UI (`@moe-assignment-demo/web`): a document
-viewer/upload flow (`app/page.tsx`) and a review page (`app/review`) with
-per-crop corrections and approval. Talks to the backend API via the
+viewer/upload flow (`app/page.tsx`) and a review page (`app/review`) for
+inspecting crops and OCR results. Talks to the backend API via the
 `NEXT_PUBLIC_API_BASE` env var (default `http://localhost:8000`).
 
 ## Repository layout
@@ -111,7 +111,7 @@ curl -F "file=@/path/to/script.pdf" http://localhost:8000/documents
 ```
 
 The upload runs the full pipeline to `REVIEW_REQUIRED`, then the review UI is
-used to inspect crops, submit corrections, and approve/export the final JSON.
+used to inspect crops and OCR results.
 
 ## API overview
 
@@ -121,16 +121,15 @@ used to inspect crops, submit corrections, and approve/export the final JSON.
 | `GET /documents/{id}/progress` | Poll pipeline progress while processing |
 | `GET /documents/{id}` | Document state + full structured JSON |
 | `GET /documents/{id}/artifacts/{path}` | Serve originals / rendered pages / crops / masks / OCR artifacts |
-| `POST /documents/{id}/corrections` | Submit a manual correction (`cropId`, `correctedText`, optional `reason`) |
-| `POST /documents/{id}/review-decisions` | Submit a review decision on an ambiguous item |
-| `POST /documents/{id}/approve` | Approve + export final JSON |
 
-State transitions are validated by the state machine:
+State transitions are validated by the state machine. The pipeline currently
+drives documents up to `REVIEW_REQUIRED`; `APPROVED`/`EXPORTED` remain
+defined in `app/state_machine.py` but have no API route driving them:
 
 ```
 UPLOADED → NORMALIZED → QUESTION_DETECTED → ANSWER_DETECTED →
 PARAGRAPHS_DETECTED → CROPS_GENERATED → OCR_PROCESSING →
-MARKUP_RECONSTRUCTION → REVIEW_REQUIRED → APPROVED → EXPORTED
+MARKUP_RECONSTRUCTION → REVIEW_REQUIRED
 ```
 
 ## Configuration
