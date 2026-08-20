@@ -183,13 +183,14 @@ remain available for review.
 
 Line transcription is provider-swappable, configured under `vision_llm` in
 `apps/backend/app/config.yaml`. Set `provider` to `openai` or `openrouter`;
-`apps/backend/app/config.yaml` has commented example blocks for each. Copy
-`apps/backend/.env.example` to `apps/backend/.env` and set the API key env
-var for whichever provider you choose. A repository-root `.env` is also
-supported; the backend loads either location automatically.
+`apps/backend/app/config.yaml` has commented example blocks for each, and
+both dispatch through the same shared transcription prompt at
+`apps/backend/app/ocr/prompts/line_transcription.md`. Models tested:
+`gpt-5.4-mini` (OpenAI) and `qwen/qwen3-vl-8b-instruct` (OpenRouter).
 
-Models tested: `gpt-5.4-mini` (OpenAI) and `qwen/qwen3-vl-8b-instruct`
-(OpenRouter).
+Copy `apps/backend/.env.example` to `apps/backend/.env` and set the API key
+env var for whichever provider you choose. A repository-root `.env` is also
+supported; the backend loads either location automatically.
 
 | Setting | Purpose |
 | --- | --- |
